@@ -13,7 +13,7 @@ import {
 } from "@mui/material";
 import { createAssetM } from "../../DAL/create";
 import { updateAssetM } from "../../DAL/edit";
-
+import { fetchallProductlist } from "../../DAL/fetch"; // ✅ Import product API
 
 const style = {
   position: "absolute",
@@ -34,7 +34,11 @@ export default function AddAssetAssignment({
   Modeldata,
   onResponse,
 }) {
-  const [productName, setProductName] = React.useState(Modeldata?.productName || "");
+  // ✅ Dropdown states
+  const [products, setProducts] = React.useState([]);
+  const [selectedProduct, setSelectedProduct] = React.useState("");
+
+  // ✅ Other fields
   const [employeeName, setEmployeeName] = React.useState(Modeldata?.employeeName || "");
   const [employeeId, setEmployeeId] = React.useState(Modeldata?.employeeId || "");
   const [assignDate, setAssignDate] = React.useState(Modeldata?.assignDate || "");
@@ -43,8 +47,26 @@ export default function AddAssetAssignment({
   const [id, setId] = React.useState(Modeldata?._id || "");
   const [errors, setErrors] = React.useState({});
 
+  // ✅ Fetch product list for dropdown
   React.useEffect(() => {
-    setProductName(Modeldata?.productName || "");
+    const getProducts = async () => {
+      try {
+        const response = await fetchallProductlist(1, 1000, "");
+        console.log("🟢 Product list response:", response);
+
+        // Adjust depending on your backend structure
+        setProducts(response?.products || response?.data || []);
+      } catch (error) {
+        console.error("❌ Error fetching products:", error);
+      }
+    };
+
+    getProducts();
+  }, []);
+
+  // ✅ Update fields when model data changes (for edit mode)
+  React.useEffect(() => {
+    setSelectedProduct(Modeldata?.productName || "");
     setEmployeeName(Modeldata?.employeeName || "");
     setEmployeeId(Modeldata?.employeeId || "");
     setAssignDate(Modeldata?.assignDate || "");
@@ -56,11 +78,12 @@ export default function AddAssetAssignment({
 
   const handleClose = () => setOpen(false);
 
+  // ✅ Submit Form
   const handleSubmit = async (e) => {
     e.preventDefault();
 
     const assignmentData = {
-      productName,
+      productName: selectedProduct,
       employeeName,
       employeeId,
       assignDate,
@@ -81,7 +104,6 @@ export default function AddAssetAssignment({
         setErrors({});
         setOpen(false);
       } else if (response?.status === 400 && response?.missingFields) {
-        // 🔴 Missing field error handling
         const fieldErrors = {};
         response.missingFields.forEach((f) => {
           fieldErrors[f.name] = f.message;
@@ -108,14 +130,25 @@ export default function AddAssetAssignment({
 
         {/* Product + Employee Name */}
         <Box sx={{ display: "flex", gap: 2, mt: 2 }}>
-          <TextField
-            fullWidth
-            label="Product Name"
-            value={productName}
-            onChange={(e) => setProductName(e.target.value)}
-            error={!!errors.productName}
-            helperText={errors.productName}
-          />
+          {/* ✅ Product dropdown */}
+          <FormControl fullWidth error={!!errors.productName}>
+            <InputLabel>Select Product</InputLabel>
+            <Select
+              value={selectedProduct}
+              onChange={(e) => setSelectedProduct(e.target.value)}
+              label="Select Product"
+            >
+              {products.map((prod) => (
+                <MenuItem key={prod._id} value={prod.productName}>
+                  {prod.productName}
+                </MenuItem>
+              ))}
+            </Select>
+            {errors.productName && (
+              <FormHelperText>{errors.productName}</FormHelperText>
+            )}
+          </FormControl>
+
           <TextField
             fullWidth
             label="Employee Name"
@@ -174,7 +207,7 @@ export default function AddAssetAssignment({
               onChange={(e) => setStatus(e.target.value)}
               label="Status"
             >
-              <MenuItem value="Active">Active</MenuItem>
+              <MenuItem value="Assigned">Assigned</MenuItem>
               <MenuItem value="Returned">Returned</MenuItem>
               <MenuItem value="Lost">Lost</MenuItem>
             </Select>
@@ -183,14 +216,7 @@ export default function AddAssetAssignment({
         </Box>
 
         {/* Buttons */}
-        <Box
-          sx={{
-            display: "flex",
-            gap: 2,
-            justifyContent: "flex-end",
-            mt: 3,
-          }}
-        >
+        <Box sx={{ display: "flex", gap: 2, justifyContent: "flex-end", mt: 3 }}>
           <Button
             type="button"
             variant="contained"

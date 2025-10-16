@@ -1,4 +1,4 @@
-import * as React from "react";
+import React, { useEffect, useState } from "react";
 import {
   Box,
   Button,
@@ -13,7 +13,7 @@ import {
 } from "@mui/material";
 import { createStockM } from "../../DAL/create";
 import { updateStock } from "../../DAL/edit";
-
+import { fetchallProductlist, fetchallSupplierlist } from "../../DAL/fetch";
 
 
 const style = {
@@ -35,29 +35,56 @@ export default function AddStock({
   Modeldata,
   onResponse,
 }) {
-  const [productName, setProductName] = React.useState(Modeldata?.productName || "");
-  const [quantity, setQuantity] = React.useState(Modeldata?.quantity || "");
-  const [unitPrice, setUnitPrice] = React.useState(Modeldata?.unitPrice || "");
-  const [totalPrice, setTotalPrice] = React.useState(Modeldata?.totalPrice || "");
-  const [supplierName, setSupplierName] = React.useState(Modeldata?.supplierName || "");
-  const [currentDate, setCurrentDate] = React.useState(Modeldata?.currentDate || "");
-  const [warrantyDate, setWarrantyDate] = React.useState(Modeldata?.warrantyDate || "");
-  const [id, setId] = React.useState(Modeldata?._id || "");
-  const [errors, setErrors] = React.useState({});
+  // ✅ Dropdown states
+  const [products, setProducts] = useState([]);
+  const [selectedProduct, setSelectedProduct] = useState("");
+  const [suppliers, setSuppliers] = useState([]);
+  const [selectedSupplier, setSelectedSupplier] = useState("");
 
-  // Auto-calc total price
-  React.useEffect(() => {
+  // ✅ Other form states
+  const [quantity, setQuantity] = useState(Modeldata?.quantity || "");
+  const [unitPrice, setUnitPrice] = useState(Modeldata?.unitPrice || "");
+  const [totalPrice, setTotalPrice] = useState(Modeldata?.totalPrice || "");
+  const [currentDate, setCurrentDate] = useState(Modeldata?.currentDate || "");
+  const [warrantyDate, setWarrantyDate] = useState(Modeldata?.warrantyDate || "");
+  const [id, setId] = useState(Modeldata?._id || "");
+  const [errors, setErrors] = useState({});
+
+  // ✅ Fetch Products & Suppliers
+  useEffect(() => {
+    const getDropdownData = async () => {
+      try {
+        const productRes = await fetchallProductlist(1, 1000, "");
+        const supplierRes = await fetchallSupplierlist(1, 1000, "");
+
+        console.log("🟢 Products:", productRes);
+        console.log("🟢 Suppliers:", supplierRes);
+
+        // ✅ Adjust according to API response structure
+        setProducts(productRes?.products || productRes?.data || []);
+        setSuppliers(supplierRes?.suppliers || supplierRes?.data || []);
+      } catch (error) {
+        console.error("Error fetching dropdown data:", error);
+      }
+    };
+
+    getDropdownData();
+  }, []);
+
+  // ✅ Auto-calc total price
+  useEffect(() => {
     if (quantity && unitPrice) {
       setTotalPrice(quantity * unitPrice);
     }
   }, [quantity, unitPrice]);
 
-  React.useEffect(() => {
-    setProductName(Modeldata?.productName || "");
+  // ✅ Handle model data update
+  useEffect(() => {
+    setSelectedProduct(Modeldata?.productName || "");
+    setSelectedSupplier(Modeldata?.supplierName || "");
     setQuantity(Modeldata?.quantity || "");
     setUnitPrice(Modeldata?.unitPrice || "");
     setTotalPrice(Modeldata?.totalPrice || "");
-    setSupplierName(Modeldata?.supplierName || "");
     setCurrentDate(Modeldata?.currentDate || "");
     setWarrantyDate(Modeldata?.warrantyDate || "");
     setId(Modeldata?._id || "");
@@ -65,15 +92,16 @@ export default function AddStock({
 
   const handleClose = () => setOpen(false);
 
+  // ✅ Submit form
   const handleSubmit = async (e) => {
     e.preventDefault();
 
     const stockData = {
-      productName,
+      productName: selectedProduct,
+      supplierName: selectedSupplier,
       quantity,
       unitPrice,
       totalPrice,
-      supplierName,
       currentDate,
       warrantyDate,
     };
@@ -83,7 +111,7 @@ export default function AddStock({
       if (Modeltype === "Add") {
         response = await createStockM(stockData);
       } else {
-        response = await updateStock(id, stockData);  
+        response = await updateStock(id, stockData);
       }
 
       if (response?.status === 201 || response?.status === 200) {
@@ -91,7 +119,6 @@ export default function AddStock({
         setErrors({});
         setOpen(false);
       } else if (response?.status === 400 && response?.missingFields) {
-        // 🔴 Handle missing fields like Supplier
         const fieldErrors = {};
         response.missingFields.forEach((f) => {
           fieldErrors[f.name] = f.message;
@@ -116,24 +143,43 @@ export default function AddStock({
           {Modeltype} Stock
         </Typography>
 
-        {/* Product Name + Supplier */}
+        {/* Product + Supplier Dropdowns */}
         <Box sx={{ display: "flex", gap: 2, mt: 2 }}>
-          <TextField
-            fullWidth
-            label="Product Name"
-            value={productName}
-            onChange={(e) => setProductName(e.target.value)}
-            error={!!errors.productName}
-            helperText={errors.productName}
-          />
-          <TextField
-            fullWidth
-            label="Supplier Name"
-            value={supplierName}
-            onChange={(e) => setSupplierName(e.target.value)}
-            error={!!errors.supplierName}
-            helperText={errors.supplierName}
-          />
+          <FormControl fullWidth error={!!errors.productName}>
+            <InputLabel>Select Product</InputLabel>
+            <Select
+              value={selectedProduct}
+              onChange={(e) => setSelectedProduct(e.target.value)}
+              label="Select Product"
+            >
+              {products.map((prod) => (
+                <MenuItem key={prod._id} value={prod._id}>
+                  {prod.productName}
+                </MenuItem>
+              ))}
+            </Select>
+            {errors.productName && (
+              <FormHelperText>{errors.productName}</FormHelperText>
+            )}
+          </FormControl>
+
+          <FormControl fullWidth error={!!errors.supplierName}>
+            <InputLabel>Select Supplier</InputLabel>
+            <Select
+              value={selectedSupplier}
+              onChange={(e) => setSelectedSupplier(e.target.value)}
+              label="Select Supplier"
+            >
+              {suppliers.map((sup) => (
+                <MenuItem key={sup._id} value={sup._id}>
+                  {sup.name}
+                </MenuItem>
+              ))}
+            </Select>
+            {errors.supplierName && (
+              <FormHelperText>{errors.supplierName}</FormHelperText>
+            )}
+          </FormControl>
         </Box>
 
         {/* Quantity + Unit Price */}
@@ -158,7 +204,7 @@ export default function AddStock({
           />
         </Box>
 
-        {/* Total Price (readonly) */}
+        {/* Total Price */}
         <Box sx={{ mt: 2 }}>
           <TextField
             fullWidth
@@ -193,14 +239,7 @@ export default function AddStock({
         </Box>
 
         {/* Buttons */}
-        <Box
-          sx={{
-            display: "flex",
-            gap: 2,
-            justifyContent: "flex-end",
-            mt: 3,
-          }}
-        >
+        <Box sx={{ display: "flex", gap: 2, justifyContent: "flex-end", mt: 3 }}>
           <Button
             type="button"
             variant="contained"

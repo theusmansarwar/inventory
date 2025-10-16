@@ -1,4 +1,4 @@
-import * as React from "react";
+import  React   from "react";
 import {
   Box,
   Button,
@@ -11,8 +11,11 @@ import {
   Select,
   FormHelperText,
 } from "@mui/material";
+import { fetchallProductlist } from "../../DAL/fetch";
 import { createLicenseM } from "../../DAL/create";
-import {  updateLicenseM } from "../../DAL/edit";
+import { updateLicenseM } from "../../DAL/edit";
+import { useEffect, useState } from "react";
+
 
 const style = {
   position: "absolute",
@@ -33,7 +36,7 @@ export default function AddLicense({
   Modeldata,
   onResponse,
 }) {
-  const [productName, setProductName] = React.useState(Modeldata?.productName || "");
+  const [productName, setProductName] = useState(Modeldata?.productName || "");
   const [licenseKey, setLicenseKey] = React.useState(Modeldata?.licenseKey || "");
   const [expiryDate, setExpiryDate] = React.useState(Modeldata?.expiryDate || "");
   const [assignedTo, setAssignedTo] = React.useState(Modeldata?.assignedTo || "");
@@ -41,7 +44,10 @@ export default function AddLicense({
   const [id, setId] = React.useState(Modeldata?._id || "");
   const [errors, setErrors] = React.useState({});
 
-  React.useEffect(() => {
+  // ✅ Product dropdown state
+  const [productList, setProductList] = React.useState([]);
+
+  useEffect(() => {
     setProductName(Modeldata?.productName || "");
     setLicenseKey(Modeldata?.licenseKey || "");
     setExpiryDate(Modeldata?.expiryDate || "");
@@ -50,6 +56,38 @@ export default function AddLicense({
     setId(Modeldata?._id || "");
     setErrors({});
   }, [Modeldata]);
+
+  // ✅ Fetch product list when modal opens
+
+ React.useEffect(() => {
+  const getProducts = async () => {
+    try {
+      const response = await fetchallProductlist();
+      console.log("Fetched products:", response?.products);
+
+      // ✅ Correct condition
+      if (response) {
+        setProductList(response.products);
+        console.log("Response full:", response);
+console.log("Direct products:", response?.products);
+
+      } else {
+        console.warn("Unexpected response format:", response);
+      }
+    } catch (error) {
+      console.error("Error fetching products:", error);
+    }
+  };
+
+  if (open) {
+    getProducts();
+  }
+}, [open]);
+
+
+
+
+  
 
   const handleClose = () => setOpen(false);
 
@@ -101,17 +139,25 @@ export default function AddLicense({
           {Modeltype} License
         </Typography>
 
-        {/* Product Name + License Key */}
+        {/* ✅ Product Dropdown + License Key */}
         <Box sx={{ display: "flex", gap: 2, mt: 2 }}>
-          <TextField
-            fullWidth
-            required
-            label="Product Name"
-            value={productName}
-            onChange={(e) => setProductName(e.target.value)}
-            error={!!errors.productName}
-            helperText={errors.productName}
-          />
+          <FormControl fullWidth error={!!errors.productName}>
+            <InputLabel id="product-label">Product</InputLabel>
+            <Select
+              labelId="product-label"
+              label="Product"
+              value={productName}
+              onChange={(e) => setProductName(e.target.value)}
+            >
+              {productList.map((p) => (
+                <MenuItem key={p._id} value={p.productName}>
+                  {p.productName}
+                </MenuItem>
+              ))}
+            </Select>
+            {errors.productName && <FormHelperText>{errors.productName}</FormHelperText>}
+          </FormControl>
+
           <TextField
             fullWidth
             required
@@ -180,7 +226,7 @@ export default function AddLicense({
             variant="contained"
             sx={{
               background: "var(--horizontal-gradient, #1976d2)",
-              color: "var(--white-color, #fff)",
+              color: "#fff",
               borderRadius: "8px",
               "&:hover": { background: "var(--vertical-gradient, #115293)" },
             }}

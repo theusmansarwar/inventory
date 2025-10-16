@@ -15,7 +15,7 @@ import { createProduct } from "../../DAL/create";
 import { updateProduct } from "../../DAL/edit";
 
 
-const style = {
+const style = { 
   position: "absolute",
   top: "50%",
   left: "50%",

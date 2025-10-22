@@ -39,15 +39,15 @@ export default function AddUsers({
   const [name, setName] = React.useState(Modeldata?.name || "");
   const [email, setEmail] = React.useState(Modeldata?.email || "");
   const [password, setPassword] = React.useState("");
-  const [role, setRole] = React.useState(Modeldata?.role || "");
+  const [role, setRole] = React.useState(Modeldata?.role?._id || Modeldata?.role || "");
   const [status, setStatus] = React.useState(
     typeof Modeldata?.status === "boolean" ? Modeldata.status : true
   );
 
   const [rolesList, setRolesList] = React.useState([]);
-  const [errors, setErrors] = React.useState({}); // track missing fields
+  const [errors, setErrors] = React.useState({});
 
-  // Fetch roles list
+  // ✅ Fetch roles
   React.useEffect(() => {
     if (open) {
       (async () => {
@@ -61,18 +61,28 @@ export default function AddUsers({
     }
   }, [open]);
 
-  // Sync Modeldata on edit
+  // ✅ Sync Modeldata on edit
   React.useEffect(() => {
     setId(Modeldata?._id || "");
     setName(Modeldata?.name || "");
     setEmail(Modeldata?.email || "");
-    setRole(Modeldata?.role || "");
+    setRole(Modeldata?.role?._id || Modeldata?.role || "");
     setStatus(typeof Modeldata?.status === "boolean" ? Modeldata.status : true);
     setPassword("");
     setErrors({});
   }, [Modeldata]);
 
   const handleClose = () => setOpen(false);
+
+  // ✅ Reset form after adding new user
+  const resetForm = () => {
+    setName("");
+    setEmail("");
+    setPassword("");
+    setRole("");
+    setStatus(true);
+    setErrors({});
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -97,10 +107,14 @@ export default function AddUsers({
             response.message ||
             (id ? "User updated successfully!" : "User created successfully!"),
         });
+
         setErrors({});
+
+        // ✅ Reset form only on "Create"
+        if (!id) resetForm();
+
         handleClose();
       } else if (response?.status === 400 && response?.missingFields) {
-        // handle missing field errors from backend
         const fieldErrors = {};
         response.missingFields.forEach((f) => {
           fieldErrors[f.name] = f.message;
@@ -200,9 +214,7 @@ export default function AddUsers({
         </Box>
 
         {/* Buttons */}
-        <Box
-          sx={{ display: "flex", gap: 2, justifyContent: "flex-end", mt: 3 }}
-        >
+        <Box sx={{ display: "flex", gap: 2, justifyContent: "flex-end", mt: 3 }}>
           <Button
             type="button"
             variant="contained"

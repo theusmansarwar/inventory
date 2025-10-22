@@ -1,4 +1,4 @@
-import * as React from "react";
+import React, { useEffect, useState } from "react";
 import {
   Box,
   Button,
@@ -11,9 +11,9 @@ import {
   Select,
   FormHelperText,
 } from "@mui/material";
-
-import { updateDeadProduct } from "../../DAL/edit";
+import { fetchallProductlist } from "../../DAL/fetch";
 import { createDeadProduct } from "../../DAL/create";
+import { updateDeadProduct } from "../../DAL/edit";
 
 const style = {
   position: "absolute",
@@ -34,15 +34,15 @@ export default function AddDeadProduct({
   Modeldata,
   onResponse,
 }) {
-  const [deadProductId, setDeadProductId] = React.useState(Modeldata?.deadProductId || "");
-  const [productName, setProductName] = React.useState(Modeldata?.productName || "");
-  const [reason, setReason] = React.useState(Modeldata?.reason || "");
-  const [status, setStatus] = React.useState(Modeldata?.status || "Dead");
-  const [id, setId] = React.useState(Modeldata?._id || "");
-  const [errors, setErrors] = React.useState({});
+  const [productName, setProductName] = useState(Modeldata?.productName || "");
+  const [reason, setReason] = useState(Modeldata?.reason || "");
+  const [status, setStatus] = useState(Modeldata?.status || "Dead");
+  const [id, setId] = useState(Modeldata?._id || "");
+  const [errors, setErrors] = useState({});
+  const [productList, setProductList] = useState([]); // ✅ for dropdown data
 
-  React.useEffect(() => {
-    setDeadProductId(Modeldata?.deadProductId || "");
+  // 🔄 Reset form data when editing
+  useEffect(() => {
     setProductName(Modeldata?.productName || "");
     setReason(Modeldata?.reason || "");
     setStatus(Modeldata?.status || "Dead");
@@ -50,13 +50,38 @@ export default function AddDeadProduct({
     setErrors({});
   }, [Modeldata]);
 
+  // ✅ Fetch products when modal opens
+  useEffect(() => {
+    const getProducts = async () => {
+      try {
+        const response = await fetchallProductlist(1, 100, "");
+        console.log("Fetched product list:", response);
+
+        // ✅ Correct flexible structure handling
+        const products =
+          response?.data?.data ||
+          response?.data?.products ||
+          response?.products ||
+          response?.data ||
+          [];
+
+        setProductList(products);
+      } catch (error) {
+        console.error("❌ Error fetching products:", error);
+      }
+    };
+
+    if (open) getProducts();
+  }, [open]);
+
+  // ❌ Close Modal
   const handleClose = () => setOpen(false);
 
+  // ✅ Submit Handler
   const handleSubmit = async (e) => {
     e.preventDefault();
 
     const deadProductData = {
-      deadProductId,
       productName,
       reason,
       status,
@@ -99,33 +124,25 @@ export default function AddDeadProduct({
           {Modeltype} Dead Product
         </Typography>
 
-        {/* Dead Product ID */}
-        <Box sx={{ display: "flex", gap: 2, mt: 2 }}>
-          <TextField
-            fullWidth
-            required
-            label="Dead Product ID"
-            value={deadProductId}
-            onChange={(e) => setDeadProductId(e.target.value)}
-            error={!!errors.deadProductId}
-            helperText={errors.deadProductId}
-          />
-        </Box>
-
-        {/* Product Name + Reason */}
+        {/* ✅ Product Dropdown + Reason */}
         <Box sx={{ display: "flex", gap: 2, mt: 2 }}>
           <FormControl fullWidth error={!!errors.productName}>
-            <InputLabel id="product-name-label">Select Product</InputLabel>
+            <InputLabel id="product-label">Product Name</InputLabel>
             <Select
-              labelId="product-name-label"
+              labelId="product-label"
+              label="Product Name"
               value={productName}
               onChange={(e) => setProductName(e.target.value)}
-              label="Select Product"
             >
-              <MenuItem value="Laptop">Laptop</MenuItem>
-              <MenuItem value="Printer">Printer</MenuItem>
-              <MenuItem value="Router">Router</MenuItem>
-              <MenuItem value="Monitor">Monitor</MenuItem>
+              {productList.length > 0 ? (
+                productList.map((p) => (
+                  <MenuItem key={p._id} value={p.productName}>
+                    {p.productName}
+                  </MenuItem>
+                ))
+              ) : (
+                <MenuItem disabled>No Products Found</MenuItem>
+              )}
             </Select>
             {errors.productName && (
               <FormHelperText>{errors.productName}</FormHelperText>
@@ -143,7 +160,7 @@ export default function AddDeadProduct({
           />
         </Box>
 
-        {/* Status */}
+        {/* ✅ Status Dropdown */}
         <Box sx={{ display: "flex", gap: 2, mt: 2 }}>
           <FormControl fullWidth error={!!errors.status}>
             <InputLabel id="status-label">Status</InputLabel>
@@ -159,7 +176,7 @@ export default function AddDeadProduct({
           </FormControl>
         </Box>
 
-        {/* Buttons */}
+        {/* ✅ Buttons */}
         <Box sx={{ display: "flex", gap: 2, justifyContent: "flex-end", mt: 3 }}>
           <Button
             type="button"
@@ -175,7 +192,7 @@ export default function AddDeadProduct({
             variant="contained"
             sx={{
               background: "var(--horizontal-gradient, #1976d2)",
-              color: "var(--white-color, #fff)",
+              color: "#fff",
               borderRadius: "8px",
               "&:hover": { background: "var(--vertical-gradient, #115293)" },
             }}

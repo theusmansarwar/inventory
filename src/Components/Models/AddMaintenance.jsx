@@ -1,4 +1,4 @@
-import * as React from "react";
+import React, { useEffect, useState } from "react";
 import {
   Box,
   Button,
@@ -13,8 +13,7 @@ import {
 } from "@mui/material";
 import { createMaintenance } from "../../DAL/create";
 import { updateMaintenance } from "../../DAL/edit";
-
-
+import { fetchallProductlist } from "../../DAL/fetch";
 
 const style = {
   position: "absolute",
@@ -35,17 +34,19 @@ export default function AddMaintenance({
   Modeldata,
   onResponse,
 }) {
-  const [assetName, setassetName] = React.useState(Modeldata?.assetName || "");
-  const [issue, setIssue] = React.useState(Modeldata?.issue || "");
-  const [reportedDate, setReportedDate] = React.useState(Modeldata?.reportedDate || "");
-  const [resolvedDate, setResolvedDate] = React.useState(Modeldata?.resolvedDate || "");
-  const [expense, setExpense] = React.useState(Modeldata?.expense || "");
-  const [status, setStatus] = React.useState(Modeldata?.status || "Pending");
-  const [id, setId] = React.useState(Modeldata?._id || "");
-  const [errors, setErrors] = React.useState({});
+  const [assetName, setAssetName] = useState(Modeldata?.assetName || "");
+  const [issue, setIssue] = useState(Modeldata?.issue || "");
+  const [reportedDate, setReportedDate] = useState(Modeldata?.reportedDate || "");
+  const [resolvedDate, setResolvedDate] = useState(Modeldata?.resolvedDate || "");
+  const [expense, setExpense] = useState(Modeldata?.expense || "");
+  const [status, setStatus] = useState(Modeldata?.status || "Pending");
+  const [id, setId] = useState(Modeldata?._id || "");
+  const [errors, setErrors] = useState({});
+  const [productList, setProductList] = useState([]);
 
-  React.useEffect(() => {
-    setassetName(Modeldata?.assetName || "");
+  // ✅ Update fields on edit/view
+  useEffect(() => {
+    setAssetName(Modeldata?.assetName || "");
     setIssue(Modeldata?.issue || "");
     setReportedDate(Modeldata?.reportedDate || "");
     setResolvedDate(Modeldata?.resolvedDate || "");
@@ -55,8 +56,31 @@ export default function AddMaintenance({
     setErrors({});
   }, [Modeldata]);
 
+  // ✅ Fetch product list from API when modal opens
+  useEffect(() => {
+    const getProducts = async () => {
+      try {
+        const response = await fetchallProductlist();
+        console.log("Fetched Products:", response);
+
+        if (response?.products) {
+          setProductList(response.products);
+        } else if (response?.data?.products) {
+          setProductList(response.data.products);
+        } else {
+          console.warn("⚠️ Unexpected product response format:", response);
+        }
+      } catch (error) {
+        console.error("❌ Error fetching products:", error);
+      }
+    };
+
+    if (open) getProducts();
+  }, [open]);
+
   const handleClose = () => setOpen(false);
 
+  // ✅ Form submit handler
   const handleSubmit = async (e) => {
     e.preventDefault();
 
@@ -106,20 +130,25 @@ export default function AddMaintenance({
           {Modeltype} Maintenance
         </Typography>
 
-        {/* Product Name + Issue */}
+        {/* ✅ Product Dropdown + Issue */}
         <Box sx={{ display: "flex", gap: 2, mt: 2 }}>
           <FormControl fullWidth error={!!errors.assetName}>
             <InputLabel id="product-label">Select Product</InputLabel>
             <Select
               labelId="product-label"
               value={assetName}
-              onChange={(e) => setassetName(e.target.value)}
+              onChange={(e) => setAssetName(e.target.value)}
               label="Select Product"
             >
-              <MenuItem value="Laptop">Laptop</MenuItem>
-              <MenuItem value="Printer">Printer</MenuItem>
-              <MenuItem value="Router">Router</MenuItem>
-              <MenuItem value="Monitor">Monitor</MenuItem>
+              {productList.length > 0 ? (
+                productList.map((p) => (
+                  <MenuItem key={p._id} value={p.productName}>
+                    {p.productName}
+                  </MenuItem>
+                ))
+              ) : (
+                <MenuItem disabled>No Products Found</MenuItem>
+              )}
             </Select>
             {errors.assetName && (
               <FormHelperText>{errors.assetName}</FormHelperText>
@@ -137,7 +166,7 @@ export default function AddMaintenance({
           />
         </Box>
 
-        {/* Reported + Resolved Date */}
+        {/* ✅ Reported + Resolved Date */}
         <Box sx={{ display: "flex", gap: 2, mt: 2 }}>
           <TextField
             fullWidth
@@ -162,7 +191,7 @@ export default function AddMaintenance({
           />
         </Box>
 
-        {/* Expense + Status */}
+        {/* ✅ Expense + Status */}
         <Box sx={{ display: "flex", gap: 2, mt: 2 }}>
           <TextField
             fullWidth
@@ -190,7 +219,7 @@ export default function AddMaintenance({
           </FormControl>
         </Box>
 
-        {/* Buttons */}
+        {/* ✅ Buttons */}
         <Box sx={{ display: "flex", gap: 2, justifyContent: "flex-end", mt: 3 }}>
           <Button
             type="button"
@@ -206,7 +235,7 @@ export default function AddMaintenance({
             variant="contained"
             sx={{
               background: "var(--horizontal-gradient, #1976d2)",
-              color: "var(--white-color, #fff)",
+              color: "#fff",
               borderRadius: "8px",
               "&:hover": { background: "var(--vertical-gradient, #115293)" },
             }}
@@ -218,3 +247,4 @@ export default function AddMaintenance({
     </Modal>
   );
 }
+  

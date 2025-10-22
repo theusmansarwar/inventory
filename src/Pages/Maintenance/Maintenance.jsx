@@ -97,6 +97,7 @@ const Maintenance = () => {
 
   const attributes = [
     { id: "assetName", label: "Asset Name" },
+    { id: "maintenanceId", label: "maintenance Id" },
     { id: "issue", label: "Issue" },
     { id: "reportedDate", label: "Reported Date" },
     { id: "resolvedDate", label: "Resolved Date" },

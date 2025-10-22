@@ -44,6 +44,7 @@ const AssetM = () => {
   const attributes = [
     // { id: "_id", label: "Assign ID" },
     { id: "productName", label: "Product Name" },
+    { id: "assignmentId", label: "Asset Id" },
     { id: "employeeName", label: "Employee Name" },
     { id: "employeeId", label: "Employee ID" },
     { id: "assignDate", label: "Assign Date" },

@@ -33,25 +33,46 @@ export default function AddSupplier({
   Modeldata,
   onResponse,
 }) {
-  const [name, setName] = React.useState(Modeldata?.name || "");
-  const [contact, setContact] = React.useState(Modeldata?.contact || "");
-  const [email, setEmail] = React.useState(Modeldata?.email || "");
-  const [address, setAddress] = React.useState(Modeldata?.address || "");
-  const [status, setStatus] = React.useState(Modeldata?.status || "");
-  const [id, setId] = React.useState(Modeldata?._id || "");
+  const [name, setName] = React.useState("");
+  const [contact, setContact] = React.useState("");
+  const [email, setEmail] = React.useState("");
+  const [address, setAddress] = React.useState("");
+  const [status, setStatus] = React.useState("");
+  const [id, setId] = React.useState("");
   const [errors, setErrors] = React.useState({});
 
+  // ✅ Handle Modeldata (prefill on view/edit)
   React.useEffect(() => {
-    setName(Modeldata?.name || "");
-    setContact(Modeldata?.contact || "");
-    setEmail(Modeldata?.email || "");
-    setAddress(Modeldata?.address || "");
-    setStatus(Modeldata?.status || "");
-    setId(Modeldata?._id || "");
+    if (Modeldata) {
+      setName(Modeldata?.name || "");
+      setContact(Modeldata?.contact || "");
+      setEmail(Modeldata?.email || "");
+      setAddress(Modeldata?.address || "");
+
+      // ✅ Convert boolean → string so Select can match
+      setStatus(
+        Modeldata?.status === true
+          ? "true"
+          : Modeldata?.status === false
+          ? "false"
+          : Modeldata?.status || ""
+      );
+
+      setId(Modeldata?._id || "");
+    } else {
+      // ✅ Reset all fields when adding a new supplier
+      setName("");
+      setContact("");
+      setEmail("");
+      setAddress("");
+      setStatus("");
+      setId("");
+    }
   }, [Modeldata]);
 
   const handleClose = () => setOpen(false);
 
+  // ✅ Submit Handler
   const handleSubmit = async (e) => {
     e.preventDefault();
 
@@ -60,7 +81,8 @@ export default function AddSupplier({
       contact,
       email,
       address,
-      status,
+      // Convert string → boolean before sending
+      status: status === "true",
     };
 
     try {
@@ -75,8 +97,15 @@ export default function AddSupplier({
         onResponse({ messageType: "success", message: response.message });
         setErrors({});
         setOpen(false);
+
+        // ✅ Clear form fields after successful add/update
+        setName("");
+        setContact("");
+        setEmail("");
+        setAddress("");
+        setStatus("");
+        setId("");
       } else if (response?.status === 400 && response?.missingFields) {
-        // 🔴 API sent missing fields
         const fieldErrors = {};
         response.missingFields.forEach((f) => {
           fieldErrors[f.name] = f.message;
@@ -141,7 +170,7 @@ export default function AddSupplier({
           />
         </Box>
 
-        {/* Status */}
+        {/* Status Dropdown */}
         <Box sx={{ display: "flex", gap: 2, mt: 2 }}>
           <FormControl fullWidth variant="outlined" error={!!errors.status}>
             <InputLabel id="status-select-label">Status</InputLabel>

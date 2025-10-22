@@ -88,6 +88,7 @@ const LicenseM = () => {
     const attributes = [
     // { id: "_id", label: "License ID" },
     { id: "productName", label: "Product Name" },
+    { id: "licenseId", label: "License Id" },
     { id: "licenseKey", label: "License Key" },
     { id: "expiryDate", label: "Expiry Date" },
     { id: "assignedTo", label: "Assigned To" },

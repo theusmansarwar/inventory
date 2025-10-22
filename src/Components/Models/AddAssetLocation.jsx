@@ -13,8 +13,7 @@ import {
 } from "@mui/material";
 import { createAssetLocation } from "../../DAL/create";
 import { updateAssetLocation } from "../../DAL/edit";
-
-
+import { fetchallProductlist } from "../../DAL/fetch"; // ✅ added
 
 const style = {
   position: "absolute",
@@ -43,7 +42,9 @@ export default function AddAssetLocation({
   const [status, setStatus] = React.useState(Modeldata?.status || "Active");
   const [id, setId] = React.useState(Modeldata?._id || "");
   const [errors, setErrors] = React.useState({});
+  const [products, setProducts] = React.useState([]); // ✅ added
 
+  // ✅ Reset data when Modeldata changes
   React.useEffect(() => {
     setAssetName(Modeldata?.assetName || "");
     setBranch(Modeldata?.branch || "");
@@ -54,6 +55,20 @@ export default function AddAssetLocation({
     setId(Modeldata?._id || "");
     setErrors({});
   }, [Modeldata]);
+
+  // ✅ Fetch product list for dropdown
+  React.useEffect(() => {
+    const getProducts = async () => {
+      try {
+        const productRes = await fetchallProductlist(1, 1000, "");
+        console.log("🟢 Products:", productRes);
+        setProducts(productRes?.products || productRes?.data || []);
+      } catch (err) {
+        console.error("Error fetching products:", err);
+      }
+    };
+    getProducts();
+  }, []);
 
   const handleClose = () => setOpen(false);
 
@@ -106,18 +121,27 @@ export default function AddAssetLocation({
           {Modeltype} Asset Location
         </Typography>
 
-        {/* Row 1: Asset Name + Branch */}
+        {/* Row 1: Asset Name (Dropdown) + Branch */}
         <Box sx={{ display: "flex", gap: 2, mt: 2 }}>
-          <TextField
-            fullWidth
-            required
-            label="Asset Name"
-            variant="outlined"
-            value={assetName}
-            onChange={(e) => setAssetName(e.target.value)}
-            error={!!errors.assetName}
-            helperText={errors.assetName}
-          />
+          {/* ✅ Product Dropdown for Asset Name */}
+          <FormControl fullWidth error={!!errors.assetName}>
+            <InputLabel>Select Asset Name</InputLabel>
+            <Select
+              value={assetName}
+              onChange={(e) => setAssetName(e.target.value)}
+              label="Select Asset Name"
+            >
+              {products.map((prod) => (
+                <MenuItem key={prod._id} value={prod.productName}>
+                  {prod.productName}
+                </MenuItem>
+              ))}
+            </Select>
+            {errors.assetName && (
+              <FormHelperText>{errors.assetName}</FormHelperText>
+            )}
+          </FormControl>
+
           <TextField
             fullWidth
             required

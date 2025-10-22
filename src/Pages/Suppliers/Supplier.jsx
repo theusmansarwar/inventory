@@ -13,6 +13,7 @@ const Supplier = () => {
   const attributes = [
     // { id: "_id", label: "Supplier Id" },
     { id: "name", label: "Name" },
+     { id: "supplierId", label: "Supplier Id" },
     { id: "contact", label: "Contact" },
     { id: "email", label: "Email" },
     { id: "address", label: "Address" },

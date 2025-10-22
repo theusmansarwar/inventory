@@ -26,6 +26,7 @@ const DeadProduct = () => {
   const attributes = [
     // { id: "_id", label: "Dead Product ID" },
     { id: "productName", label: "Product Name" },
+     //  { id: "deadProductId", label: "dead Id" },
     { id: "reason", label: "Reason" },
     { id: "status", label: "Status" },
   ];

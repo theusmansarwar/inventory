@@ -79,16 +79,38 @@ export default function AddStock({
   }, [quantity, unitPrice]);
 
   // ✅ Handle model data update
-  useEffect(() => {
-    setSelectedProduct(Modeldata?.productName || "");
-    setSelectedSupplier(Modeldata?.supplierName || "");
+ useEffect(() => {
+  if (Modeldata) {
+    // ✅ Product name OR nested object
+    setSelectedProduct(
+      Modeldata?.productName?.productName || // if productName is an object
+      Modeldata?.productName || // if it's a string
+      ""
+    );
+
+    // ✅ Supplier name OR nested object
+    setSelectedSupplier(
+      Modeldata?.supplierName?.name || // if supplierName is an object
+      Modeldata?.supplierName || // if it's a string
+      ""
+    );
+
     setQuantity(Modeldata?.quantity || "");
     setUnitPrice(Modeldata?.unitPrice || "");
     setTotalPrice(Modeldata?.totalPrice || "");
-    setCurrentDate(Modeldata?.currentDate || "");
-    setWarrantyDate(Modeldata?.warrantyDate || "");
+
+    // ✅ Date fix for input type="date"
+    setCurrentDate(
+      Modeldata?.currentDate ? Modeldata.currentDate.split("T")[0] : ""
+    );
+    setWarrantyDate(
+      Modeldata?.warrantyDate ? Modeldata.warrantyDate.split("T")[0] : ""
+    );
+
     setId(Modeldata?._id || "");
-  }, [Modeldata]);
+  }
+}, [Modeldata]);
+
 
   const handleClose = () => setOpen(false);
 
@@ -145,41 +167,37 @@ export default function AddStock({
 
         {/* Product + Supplier Dropdowns */}
         <Box sx={{ display: "flex", gap: 2, mt: 2 }}>
-          <FormControl fullWidth error={!!errors.productName}>
-            <InputLabel>Select Product</InputLabel>
-            <Select
-              value={selectedProduct}
-              onChange={(e) => setSelectedProduct(e.target.value)}
-              label="Select Product"
-            >
-              {products.map((prod) => (
-                <MenuItem key={prod._id} value={prod._id}>
-                  {prod.productName}
-                </MenuItem>
-              ))}
-            </Select>
-            {errors.productName && (
-              <FormHelperText>{errors.productName}</FormHelperText>
-            )}
-          </FormControl>
+<FormControl fullWidth error={!!errors.productName}>
+  <InputLabel>Select Product</InputLabel>
+  <Select
+    value={selectedProduct}
+    onChange={(e) => setSelectedProduct(e.target.value)}
+    label="Select Product"
+  >
+    {products.map((prod) => (
+      <MenuItem key={prod._id} value={prod.productName}>
+        {prod.productName}
+      </MenuItem>
+    ))}
+  </Select>
+</FormControl>
 
-          <FormControl fullWidth error={!!errors.supplierName}>
-            <InputLabel>Select Supplier</InputLabel>
-            <Select
-              value={selectedSupplier}
-              onChange={(e) => setSelectedSupplier(e.target.value)}
-              label="Select Supplier"
-            >
-              {suppliers.map((sup) => (
-                <MenuItem key={sup._id} value={sup._id}>
-                  {sup.name}
-                </MenuItem>
-              ))}
-            </Select>
-            {errors.supplierName && (
-              <FormHelperText>{errors.supplierName}</FormHelperText>
-            )}
-          </FormControl>
+<FormControl fullWidth error={!!errors.supplierName}>
+  <InputLabel>Select Supplier</InputLabel>
+  <Select
+    value={selectedSupplier}
+    onChange={(e) => setSelectedSupplier(e.target.value)}
+    label="Select Supplier"
+  >
+    {suppliers.map((sup) => (
+      <MenuItem key={sup._id} value={sup.name}>
+        {sup.name}
+      </MenuItem>
+    ))}
+  </Select>
+</FormControl>
+
+
         </Box>
 
         {/* Quantity + Unit Price */}

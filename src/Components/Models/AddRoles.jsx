@@ -48,7 +48,7 @@ export default function AddRoles({
 
   const [id, setId] = React.useState(Modeldata?._id || "");
 
-  const allModules = ["Users", "Suppliers","Products","Stock Management","Asset Assignment","License Management", "Maintenance","Dead Products","Asset Location"];
+  const allModules = ["Dashboard","Users","Roles", "Suppliers","Products","Stock Management","Asset Assignment","License Management", "Maintenance","Dead Products","Asset Location"];
 
   React.useEffect(() => {
     setName(Modeldata?.name || "");

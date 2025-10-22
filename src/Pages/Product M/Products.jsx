@@ -14,7 +14,8 @@ const Products = () => {
   const attributes = [
     // { id: "_id", label: "Product Id" },
     { id: "productName", label: "Product Name" },
-    { id: "category", label: "Category" },
+    { id: "productId", label: "Product ID" },
+     { id: "category", label: "Category" },
     { id: "status", label: "Status" },
   ];
 

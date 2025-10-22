@@ -11,6 +11,7 @@ const AssetLocation = () => {
   const attributes = [
     // { id: "_id", label: "Asset Id" },
     { id: "assetName", label: "Asset Name" },
+    { id: "locationId", label: "Asset_Loc Id" },
     { id: "branch", label: "Branch" },
     { id: "floor", label: "Floor" },
     { id: "room", label: "Room" },

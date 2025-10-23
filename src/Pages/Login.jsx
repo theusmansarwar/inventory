@@ -1,17 +1,27 @@
 import React, { useState, useEffect } from "react";
-import { Box, Button, TextField, Typography, Paper, CircularProgress } from "@mui/material";
+import {
+  Box,
+  Button,
+  TextField,
+  Typography,
+  Paper,
+  CircularProgress,
+} from "@mui/material";
 import { login } from "../DAL/auth";
 import logo from "../Assets/imslogo.png";
-import './login.css'
+import "./login.css";
 import { useAlert } from "../Components/Alert/AlertContext";
 
-
 const Login = ({ onLoginSuccess }) => {
-   const { showAlert } = useAlert(); 
+  const { showAlert } = useAlert();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
 
+  // 🔹 For showing error for each field separately
+  const [errors, setErrors] = useState({ email: "", password: "" });
+
+  // 🔹 Auto-fill from localStorage if saved
   useEffect(() => {
     const savedEmail = localStorage.getItem("email");
     const savedPassword = localStorage.getItem("password");
@@ -21,56 +31,64 @@ const Login = ({ onLoginSuccess }) => {
     }
   }, []);
 
-const handleLogin = async (e) => {
-  e.preventDefault();
-  setLoading(true);
+  // 🔹 Handle login click
+  const handleLogin = async (e) => {
+    e.preventDefault();
 
-  const formData = new FormData();
-  formData.append("email", email);
-  formData.append("password", password);
+    // Step 1: Reset old errors
+    setErrors({ email: "", password: "" });
 
-  try {
-    const result = await login(formData);
+    // Step 2: Front-end validation
+    let hasError = false;
+    const newErrors = { email: "", password: "" };
 
-    if (result.status === 200) {
-      showAlert("success", result?.message || "Login successful!");
-      localStorage.setItem("Token", result?.token);
-      localStorage.setItem("user", JSON.stringify(result?.data));
-      onLoginSuccess();
-    } else {
-      showAlert("error", result?.message || "Login failed.");
+    if (!email.trim()) {
+      newErrors.email = "Email is required.";
+      hasError = true;
     }
-  } catch (error) {
-    if (error.response) {
-      showAlert("error", error.response.data.message || "An error occurred.");
-    } else if (error.request) {
-      showAlert("error", "No response from the server.");
-    } else {
-      showAlert("error", error?.message || "Unexpected error occurred.");
+    if (!password.trim()) {
+      newErrors.password = "Password is required.";
+      hasError = true;
     }
-  } finally {
-    setLoading(false);
-  }
-};
 
+    setErrors(newErrors);
+
+    // Stop if any field is empty
+    if (hasError) return;
+
+    // Step 3: Call API
+    setLoading(true);
+
+    const formData = new FormData();
+    formData.append("email", email);
+    formData.append("password", password);
+
+    try {
+      const result = await login(formData);
+
+      if (result.status === 200) {
+        showAlert("success", result?.message || "Login successful!");
+        localStorage.setItem("Token", result?.token);
+        localStorage.setItem("user", JSON.stringify(result?.data));
+        onLoginSuccess();
+      } else {
+        showAlert("error", result?.message || "Login failed.");
+      }
+    } catch (error) {
+      if (error.response) {
+        showAlert("error", error.response.data.message || "An error occurred.");
+      } else if (error.request) {
+        showAlert("error", "No response from the server.");
+      } else {
+        showAlert("error", error?.message || "Unexpected error occurred.");
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
-    <Box
-    className="login"
-   
-    >
-      {loading && (
-        <CircularProgress
-          size={60}
-          thickness={4}
-          sx={{
-            position: "absolute",
-            top: "20px",
-            color: "primary.main",
-          }}
-        />
-      )}
-
+    <Box className="login">
       <Paper
         elevation={6}
         sx={{
@@ -94,9 +112,10 @@ const handleLogin = async (e) => {
           />
 
           <Typography variant="h5" gutterBottom>
-            Admin Login
+            Inventory Management System
           </Typography>
 
+          {/* 🔹 Email Field */}
           <TextField
             fullWidth
             type="email"
@@ -104,8 +123,11 @@ const handleLogin = async (e) => {
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             margin="normal"
+            error={!!errors.email}
+            helperText={errors.email}
           />
 
+          {/* 🔹 Password Field */}
           <TextField
             fullWidth
             type="password"
@@ -113,8 +135,11 @@ const handleLogin = async (e) => {
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             margin="normal"
+            error={!!errors.password}
+            helperText={errors.password}
           />
 
+          {/* 🔹 Submit Button with Loader */}
           <Button
             type="submit"
             fullWidth
@@ -129,8 +154,13 @@ const handleLogin = async (e) => {
                 opacity: 0.9,
               },
             }}
+            disabled={loading}
           >
-            Submit
+            {loading ? (
+              <CircularProgress size={24} sx={{ color: "white" }} />
+            ) : (
+              "Submit"
+            )}
           </Button>
         </Box>
       </Paper>

@@ -120,7 +120,7 @@ try{
   return (
     <Modal open={open} onClose={handleClose}>
       <Box sx={style}>
-        <Typography variant="h6" gutterBottom>
+        <Typography variant="h6" gutterBottom sx={{ textTransform: "none" }}>
           {Modeltype} Role
         </Typography>
 
@@ -190,8 +190,8 @@ try{
 
           {/* Buttons */}
           <Box mt={3} display="flex" justifyContent="flex-end" gap={2}>
-            <Button variant="outlined" onClick={handleClose}>
-              Cancel
+            <Button variant="outlined" onClick={handleClose} sx={{textTransform: "none",}}>
+              Cancel  
             </Button>
             <Button
               type="submit"
@@ -200,9 +200,11 @@ try{
                 background: "var(--horizontal-gradient)",
                 color: "white",
                 "&:hover": { background: "var(--vertical-gradient)" },
+                textTransform: "none",
               }}
+              
             >
-              Save Role
+              Add Role
             </Button>
           </Box>
         </form>

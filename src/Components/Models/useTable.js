@@ -572,10 +572,11 @@ const handleSearch = () => {
                       color: "var(--white-color)",
                       borderRadius: "var(--border-radius-secondary)",
                       "&:hover": { background: "var(--vertical-gradient)" },
+                  textTransform: "none"
                     }}
                     onClick={handleAddButton}
                   >
-                    Add {tableType}
+                    Add New {tableType}
                   </Button>
                 )
               )}

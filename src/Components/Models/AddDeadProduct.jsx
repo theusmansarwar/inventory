@@ -39,7 +39,7 @@ export default function AddDeadProduct({
   const [status, setStatus] = useState(Modeldata?.status || "Dead");
   const [id, setId] = useState(Modeldata?._id || "");
   const [errors, setErrors] = useState({});
-  const [productList, setProductList] = useState([]); // ✅ for dropdown data
+  const [productList, setProductList] = useState([]);
 
   // 🔄 Reset form data when editing
   useEffect(() => {
@@ -55,16 +55,12 @@ export default function AddDeadProduct({
     const getProducts = async () => {
       try {
         const response = await fetchallProductlist(1, 100, "");
-        console.log("Fetched product list:", response);
-
-        // ✅ Correct flexible structure handling
         const products =
           response?.data?.data ||
           response?.data?.products ||
           response?.products ||
           response?.data ||
           [];
-
         setProductList(products);
       } catch (error) {
         console.error("❌ Error fetching products:", error);
@@ -81,11 +77,7 @@ export default function AddDeadProduct({
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    const deadProductData = {
-      productName,
-      reason,
-      status,
-    };
+    const deadProductData = { productName, reason, status };
 
     try {
       let response;
@@ -96,8 +88,15 @@ export default function AddDeadProduct({
       }
 
       if (response?.status === 201 || response?.status === 200) {
-        onResponse({ messageType: "success", message: response.message });
+        // ✅ Success
+        onResponse({ messageType: "success", message: response.message, reload: true });
+
+        // ✅ Reset form fields
+        setProductName("");
+        setReason("");
+        setStatus("Dead");
         setErrors({});
+
         setOpen(false);
       } else if (response?.status === 400 && response?.missingFields) {
         const fieldErrors = {};
@@ -124,7 +123,7 @@ export default function AddDeadProduct({
           {Modeltype} Dead Product
         </Typography>
 
-        {/* ✅ Product Dropdown + Reason */}
+        {/* Product Name + Reason */}
         <Box sx={{ display: "flex", gap: 2, mt: 2 }}>
           <FormControl fullWidth error={!!errors.productName}>
             <InputLabel id="product-label">Product Name</InputLabel>
@@ -160,7 +159,7 @@ export default function AddDeadProduct({
           />
         </Box>
 
-        {/* ✅ Status Dropdown */}
+        {/* Status Dropdown */}
         <Box sx={{ display: "flex", gap: 2, mt: 2 }}>
           <FormControl fullWidth error={!!errors.status}>
             <InputLabel id="status-label">Status</InputLabel>
@@ -176,12 +175,12 @@ export default function AddDeadProduct({
           </FormControl>
         </Box>
 
-        {/* ✅ Buttons */}
+        {/* Buttons */}
         <Box sx={{ display: "flex", gap: 2, justifyContent: "flex-end", mt: 3 }}>
           <Button
             type="button"
             variant="contained"
-            sx={{ backgroundColor: "#B1B1B1" }}
+            sx={{ backgroundColor: "#B1B1B1" , textTransform: "none",}}
             onClick={handleClose}
           >
             Cancel
@@ -195,6 +194,7 @@ export default function AddDeadProduct({
               color: "#fff",
               borderRadius: "8px",
               "&:hover": { background: "var(--vertical-gradient, #115293)" },
+                textTransform: "none",
             }}
           >
             Submit

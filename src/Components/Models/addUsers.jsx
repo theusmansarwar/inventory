@@ -28,13 +28,7 @@ const style = {
   borderRadius: "12px",
 };
 
-export default function AddUsers({
-  open,
-  setOpen,
-  Modeltype,
-  Modeldata,
-  onResponse,
-}) {
+export default function AddUsers({ open, setOpen, Modeldata, onResponse }) {
   const [id, setId] = React.useState(Modeldata?._id || "");
   const [name, setName] = React.useState(Modeldata?.name || "");
   const [email, setEmail] = React.useState(Modeldata?.email || "");
@@ -47,7 +41,7 @@ export default function AddUsers({
   const [rolesList, setRolesList] = React.useState([]);
   const [errors, setErrors] = React.useState({});
 
-  // ✅ Fetch roles
+  // ✅ Fetch roles when modal opens
   React.useEffect(() => {
     if (open) {
       (async () => {
@@ -61,7 +55,7 @@ export default function AddUsers({
     }
   }, [open]);
 
-  // ✅ Sync Modeldata on edit
+  // ✅ Sync Modeldata for edit mode
   React.useEffect(() => {
     setId(Modeldata?._id || "");
     setName(Modeldata?.name || "");
@@ -74,8 +68,9 @@ export default function AddUsers({
 
   const handleClose = () => setOpen(false);
 
-  // ✅ Reset form after adding new user
+  // ✅ Reset form
   const resetForm = () => {
+    setId("");
     setName("");
     setEmail("");
     setPassword("");
@@ -84,13 +79,33 @@ export default function AddUsers({
     setErrors({});
   };
 
+  // ✅ Email validation
+  const validateEmail = (email) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    const userData = { name, email, role, status };
-    if (!id && password) {
-      userData.password = password;
+    const fieldErrors = {};
+    if (!name.trim()) fieldErrors.name = "Name is required";
+    if (!email.trim()) fieldErrors.email = "Email is required";
+    else if (!validateEmail(email.trim())) fieldErrors.email = "Invalid email format";
+
+    if (!id && !password.trim()) fieldErrors.password = "Password is required";
+    if (!role) fieldErrors.role = "Role is required";
+    if (status === "" || status === null) fieldErrors.status = "Status is required";
+
+    // Stop if validation fails
+    if (Object.keys(fieldErrors).length > 0) {
+      setErrors(fieldErrors);
+      onResponse({
+        messageType: "error",
+        message: "Please fix the highlighted fields",
+      });
+      return;
     }
+
+    const userData = { name, email, role, status };
+    if (!id) userData.password = password;
 
     try {
       let response;
@@ -100,40 +115,37 @@ export default function AddUsers({
         response = await createUser(userData);
       }
 
+      // ✅ Success case
       if (response?.status === 200 || response?.status === 201) {
         onResponse({
           messageType: "success",
           message:
             response.message ||
             (id ? "User updated successfully!" : "User created successfully!"),
+          refresh: true, // 👈 triggers parent refresh
         });
 
-        setErrors({});
-
-        // ✅ Reset form only on "Create"
-        if (!id) resetForm();
-
+        resetForm();
         handleClose();
-      } else if (response?.status === 400 && response?.missingFields) {
-        const fieldErrors = {};
-        response.missingFields.forEach((f) => {
-          fieldErrors[f.name] = f.message;
-        });
-        setErrors(fieldErrors);
-        onResponse({ messageType: "error", message: "Validation failed" });
-      } else {
-        onResponse({
-          messageType: "error",
-          message:
-            response?.message || "Something went wrong while saving the user!",
-        });
+        return;
       }
+
+      // ✅ Specific duplicate email case
+      let message = response?.message || "Something went wrong!";
+      if (message.toLowerCase().includes("exists")) {
+        setErrors({ email: "This email already exists" });
+        message = "This email already exists";
+      }
+
+      onResponse({ messageType: "error", message });
     } catch (error) {
       console.error("❌ API Error:", error);
-      onResponse({
-        messageType: "error",
-        message: error.message || "Server error occurred!",
-      });
+      let errMsg = error.message || "Server error occurred!";
+      if (errMsg.toLowerCase().includes("exists")) {
+        setErrors({ email: "This email already exists" });
+        errMsg = "This email already exists";
+      }
+      onResponse({ messageType: "error", message: errMsg });
     }
   };
 
@@ -164,7 +176,7 @@ export default function AddUsers({
           />
         </Box>
 
-        {/* Password (only when creating) */}
+        {/* Password (only for create) */}
         {!id && (
           <Box sx={{ display: "flex", gap: 2, mt: 2 }}>
             <TextField

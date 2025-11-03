@@ -261,7 +261,7 @@ export default function AddStock({
           <Button
             type="button"
             variant="contained"
-            sx={{ backgroundColor: "#B1B1B1" }}
+            sx={{ backgroundColor: "#B1B1B1",  textTransform: "none", }}
             onClick={handleClose}
           >
             Cancel
@@ -275,6 +275,7 @@ export default function AddStock({
               color: "var(--white-color)",
               borderRadius: "var(--border-radius-secondary)",
               "&:hover": { background: "var(--vertical-gradient)" },
+               textTransform: "none",
             }}
           >
             Submit

@@ -36,53 +36,75 @@ export default function AddMaintenance({
 }) {
   const [assetName, setAssetName] = useState(Modeldata?.assetName || "");
   const [issue, setIssue] = useState(Modeldata?.issue || "");
-  const [reportedDate, setReportedDate] = useState(Modeldata?.reportedDate || "");
-  const [resolvedDate, setResolvedDate] = useState(Modeldata?.resolvedDate || "");
+  const [reportedDate, setReportedDate] = useState(
+    Modeldata?.reportedDate ? Modeldata.reportedDate.split("T")[0] : ""
+  );
+  const [resolvedDate, setResolvedDate] = useState(
+    Modeldata?.resolvedDate ? Modeldata.resolvedDate.split("T")[0] : ""
+  );
   const [expense, setExpense] = useState(Modeldata?.expense || "");
   const [status, setStatus] = useState(Modeldata?.status || "Pending");
   const [id, setId] = useState(Modeldata?._id || "");
   const [errors, setErrors] = useState({});
   const [productList, setProductList] = useState([]);
 
-  // ✅ Update fields on edit/view
+  // 🔄 Reset when model opens or changes
   useEffect(() => {
     setAssetName(Modeldata?.assetName || "");
     setIssue(Modeldata?.issue || "");
-    setReportedDate(Modeldata?.reportedDate || "");
-    setResolvedDate(Modeldata?.resolvedDate || "");
+    setReportedDate(
+      Modeldata?.reportedDate ? Modeldata.reportedDate.split("T")[0] : ""
+    );
+    setResolvedDate(
+      Modeldata?.resolvedDate ? Modeldata.resolvedDate.split("T")[0] : ""
+    );
     setExpense(Modeldata?.expense || "");
     setStatus(Modeldata?.status || "Pending");
     setId(Modeldata?._id || "");
     setErrors({});
   }, [Modeldata]);
 
-  // ✅ Fetch product list from API when modal opens
+  // ✅ Fetch products for dropdown
   useEffect(() => {
     const getProducts = async () => {
       try {
-        const response = await fetchallProductlist();
-        console.log("Fetched Products:", response);
-
-        if (response?.products) {
-          setProductList(response.products);
-        } else if (response?.data?.products) {
-          setProductList(response.data.products);
-        } else {
-          console.warn("⚠️ Unexpected product response format:", response);
-        }
+        const response = await fetchallProductlist(1, 100, "");
+        const products =
+          response?.data?.data ||
+          response?.data?.products ||
+          response?.products ||
+          response?.data ||
+          [];
+        setProductList(products);
       } catch (error) {
         console.error("❌ Error fetching products:", error);
       }
     };
-
     if (open) getProducts();
   }, [open]);
 
   const handleClose = () => setOpen(false);
 
-  // ✅ Form submit handler
+  // ✅ Submit with validation
   const handleSubmit = async (e) => {
     e.preventDefault();
+    const newErrors = {};
+
+    // Basic required checks
+    if (!assetName) newErrors.assetName = "Product is required";
+    if (!issue) newErrors.issue = "Issue is required";
+    if (!reportedDate) newErrors.reportedDate = "Reported date is required";
+    if (!expense) newErrors.expense = "Expense is required";
+
+    // ✅ Conditional resolved date requirement
+    if (status === "Resolved" && !resolvedDate) {
+      newErrors.resolvedDate = "Resolved date is required when status is 'Resolved'";
+    }
+
+    setErrors(newErrors);
+
+    // ❌ Stop if errors exist
+    if (Object.keys(newErrors).length > 0) return;
 
     const maintenanceData = {
       assetName,
@@ -101,10 +123,13 @@ export default function AddMaintenance({
         response = await updateMaintenance(id, maintenanceData);
       }
 
-      if (response?.status === 201 || response?.status === 200) {
-        onResponse({ messageType: "success", message: response.message });
-        setErrors({});
+      if (response?.status === 200 || response?.status === 201) {
+        onResponse({
+          messageType: "success",
+          message: response?.message || "Maintenance record saved!",
+        });
         setOpen(false);
+        setErrors({});
       } else if (response?.status === 400 && response?.missingFields) {
         const fieldErrors = {};
         response.missingFields.forEach((f) => {
@@ -112,7 +137,10 @@ export default function AddMaintenance({
         });
         setErrors(fieldErrors);
       } else {
-        onResponse({ messageType: "error", message: response?.message });
+        onResponse({
+          messageType: "error",
+          message: response?.message || "Something went wrong",
+        });
       }
     } catch (err) {
       console.error("❌ Error:", err);
@@ -130,7 +158,7 @@ export default function AddMaintenance({
           {Modeltype} Maintenance
         </Typography>
 
-        {/* ✅ Product Dropdown + Issue */}
+        {/* ✅ Product & Issue */}
         <Box sx={{ display: "flex", gap: 2, mt: 2 }}>
           <FormControl fullWidth error={!!errors.assetName}>
             <InputLabel id="product-label">Select Product</InputLabel>
@@ -150,9 +178,7 @@ export default function AddMaintenance({
                 <MenuItem disabled>No Products Found</MenuItem>
               )}
             </Select>
-            {errors.assetName && (
-              <FormHelperText>{errors.assetName}</FormHelperText>
-            )}
+            {errors.assetName && <FormHelperText>{errors.assetName}</FormHelperText>}
           </FormControl>
 
           <TextField
@@ -166,7 +192,7 @@ export default function AddMaintenance({
           />
         </Box>
 
-        {/* ✅ Reported + Resolved Date */}
+        {/* ✅ Dates */}
         <Box sx={{ display: "flex", gap: 2, mt: 2 }}>
           <TextField
             fullWidth
@@ -179,6 +205,7 @@ export default function AddMaintenance({
             error={!!errors.reportedDate}
             helperText={errors.reportedDate}
           />
+
           <TextField
             fullWidth
             label="Resolved Date"
@@ -203,6 +230,7 @@ export default function AddMaintenance({
             error={!!errors.expense}
             helperText={errors.expense}
           />
+
           <FormControl fullWidth error={!!errors.status}>
             <InputLabel id="status-label">Status</InputLabel>
             <Select
@@ -224,7 +252,7 @@ export default function AddMaintenance({
           <Button
             type="button"
             variant="contained"
-            sx={{ backgroundColor: "#B1B1B1" }}
+            sx={{ backgroundColor: "#B1B1B1", textTransform: "none" }}
             onClick={handleClose}
           >
             Cancel
@@ -238,6 +266,7 @@ export default function AddMaintenance({
               color: "#fff",
               borderRadius: "8px",
               "&:hover": { background: "var(--vertical-gradient, #115293)" },
+              textTransform: "none",
             }}
           >
             Submit
@@ -247,4 +276,3 @@ export default function AddMaintenance({
     </Modal>
   );
 }
-  

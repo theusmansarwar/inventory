@@ -13,7 +13,7 @@ import {
 } from "@mui/material";
 import { createAssetM } from "../../DAL/create";
 import { updateAssetM } from "../../DAL/edit";
-import { fetchallProductlist } from "../../DAL/fetch"; // ✅ Import product API
+import { fetchallProductlist } from "../../DAL/fetch";
 
 const style = {
   position: "absolute",
@@ -34,17 +34,15 @@ export default function AddAssetAssignment({
   Modeldata,
   onResponse,
 }) {
-  // ✅ Dropdown states
   const [products, setProducts] = React.useState([]);
   const [selectedProduct, setSelectedProduct] = React.useState("");
 
-  // ✅ Other fields
-  const [employeeName, setEmployeeName] = React.useState(Modeldata?.employeeName || "");
-  const [employeeId, setEmployeeId] = React.useState(Modeldata?.employeeId || "");
-  const [assignDate, setAssignDate] = React.useState(Modeldata?.assignDate || "");
-  const [condition, setCondition] = React.useState(Modeldata?.condition || "");
-  const [status, setStatus] = React.useState(Modeldata?.status || "");
-  const [id, setId] = React.useState(Modeldata?._id || "");
+  const [employeeName, setEmployeeName] = React.useState("");
+  const [employeeId, setEmployeeId] = React.useState("");
+  const [assignDate, setAssignDate] = React.useState("");
+  const [condition, setCondition] = React.useState("");
+  const [status, setStatus] = React.useState("");
+  const [id, setId] = React.useState("");
   const [errors, setErrors] = React.useState({});
 
   // ✅ Fetch product list for dropdown
@@ -52,35 +50,71 @@ export default function AddAssetAssignment({
     const getProducts = async () => {
       try {
         const response = await fetchallProductlist(1, 1000, "");
-        console.log("🟢 Product list response:", response);
-
-        // Adjust depending on your backend structure
         setProducts(response?.products || response?.data || []);
       } catch (error) {
         console.error("❌ Error fetching products:", error);
       }
     };
-
     getProducts();
   }, []);
 
-  // ✅ Update fields when model data changes (for edit mode)
+  // ✅ Load edit data
   React.useEffect(() => {
-    setSelectedProduct(Modeldata?.productName || "");
-    setEmployeeName(Modeldata?.employeeName || "");
-    setEmployeeId(Modeldata?.employeeId || "");
-    setAssignDate(Modeldata?.assignDate || "");
-    setCondition(Modeldata?.condition || "");
-    setStatus(Modeldata?.status || "");
-    setId(Modeldata?._id || "");
-    setErrors({});
+    if (Modeldata) {
+      setSelectedProduct(Modeldata?.productName || "");
+      setEmployeeName(Modeldata?.employeeName || "");
+      setEmployeeId(Modeldata?.employeeId || "");
+      setAssignDate(Modeldata?.assignDate?.split("T")[0] || "");
+      setCondition(Modeldata?.condition || "");
+      setStatus(Modeldata?.status || "");
+      setId(Modeldata?._id || "");
+      setErrors({});
+    } else {
+      // Reset if adding new
+      setSelectedProduct("");
+      setEmployeeName("");
+      setEmployeeId("");
+      setAssignDate("");
+      setCondition("");
+      setStatus("");
+      setErrors({});
+    }
   }, [Modeldata]);
 
   const handleClose = () => setOpen(false);
 
+  // ✅ Client-side validation
+  const validateForm = () => {
+    const newErrors = {};
+
+    if (!employeeName.trim()) {
+      newErrors.employeeName = "Employee name is required.";
+    } else if (!/^[A-Za-z\s]+$/.test(employeeName)) {
+      newErrors.employeeName = "Only letters and spaces are allowed.";
+    }
+
+    if (!employeeId.trim()) {
+      newErrors.employeeId = "Employee ID is required.";
+    } else if (isNaN(employeeId)) {
+      newErrors.employeeId = "Employee ID must be a number.";
+    } else if (Number(employeeId) < 0) {
+      newErrors.employeeId = "Employee ID cannot be negative.";
+    }
+
+    if (!assignDate) newErrors.assignDate = "Assign date is required.";
+    if (!selectedProduct) newErrors.productName = "Product selection is required.";
+    if (!condition) newErrors.condition = "Condition is required.";
+    if (!status) newErrors.status = "Status is required.";
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
   // ✅ Submit Form
   const handleSubmit = async (e) => {
     e.preventDefault();
+
+    if (!validateForm()) return;
 
     const assignmentData = {
       productName: selectedProduct,
@@ -99,24 +133,36 @@ export default function AddAssetAssignment({
         response = await updateAssetM(id, assignmentData);
       }
 
-      if (response?.status === 201 || response?.status === 200) {
-        onResponse({ messageType: "success", message: response.message });
+      if (response?.status === 201 || response?.status === 200 || response?.success) {
+        onResponse({ messageType: "success", message: response.message || "Saved successfully" });
+
+        // ✅ Reset fields
+        setEmployeeName("");
+        setEmployeeId("");
+        setAssignDate("");
+        setCondition("");
+        setStatus("");
+        setSelectedProduct("");
         setErrors({});
         setOpen(false);
-      } else if (response?.status === 400 && response?.missingFields) {
+
+        // ✅ Refresh the page (or you can call parent fetch)
+    
+      } else if (response?.missingFields) {
         const fieldErrors = {};
-        response.missingFields.forEach((f) => {
-          fieldErrors[f.name] = f.message;
-        });
+        response.missingFields.forEach((f) => (fieldErrors[f.name] = f.message));
         setErrors(fieldErrors);
       } else {
-        onResponse({ messageType: "error", message: response?.message });
+        onResponse({
+          messageType: "error",
+          message: response?.message || "Something went wrong, please check your input.",
+        });
       }
     } catch (err) {
       console.error("❌ Error:", err);
       onResponse({
         messageType: "error",
-        message: err.response?.data?.message || "Server error",
+        message: err.response?.data?.message || "Server error. Please try again.",
       });
     }
   };
@@ -130,7 +176,6 @@ export default function AddAssetAssignment({
 
         {/* Product + Employee Name */}
         <Box sx={{ display: "flex", gap: 2, mt: 2 }}>
-          {/* ✅ Product dropdown */}
           <FormControl fullWidth error={!!errors.productName}>
             <InputLabel>Select Product</InputLabel>
             <Select
@@ -144,9 +189,7 @@ export default function AddAssetAssignment({
                 </MenuItem>
               ))}
             </Select>
-            {errors.productName && (
-              <FormHelperText>{errors.productName}</FormHelperText>
-            )}
+            {errors.productName && <FormHelperText>{errors.productName}</FormHelperText>}
           </FormControl>
 
           <TextField
@@ -164,10 +207,12 @@ export default function AddAssetAssignment({
           <TextField
             fullWidth
             label="Employee ID"
+            type="number"
             value={employeeId}
             onChange={(e) => setEmployeeId(e.target.value)}
             error={!!errors.employeeId}
             helperText={errors.employeeId}
+            inputProps={{ min: 0 }}
           />
           <TextField
             fullWidth
@@ -183,10 +228,9 @@ export default function AddAssetAssignment({
 
         {/* Condition + Status */}
         <Box sx={{ display: "flex", gap: 2, mt: 2 }}>
-          <FormControl fullWidth variant="outlined" error={!!errors.condition}>
-            <InputLabel id="condition-select-label">Condition</InputLabel>
+          <FormControl fullWidth error={!!errors.condition}>
+            <InputLabel>Condition</InputLabel>
             <Select
-              labelId="condition-select-label"
               value={condition}
               onChange={(e) => setCondition(e.target.value)}
               label="Condition"
@@ -199,10 +243,9 @@ export default function AddAssetAssignment({
             {errors.condition && <FormHelperText>{errors.condition}</FormHelperText>}
           </FormControl>
 
-          <FormControl fullWidth variant="outlined" error={!!errors.status}>
-            <InputLabel id="status-select-label">Status</InputLabel>
+          <FormControl fullWidth error={!!errors.status}>
+            <InputLabel>Status</InputLabel>
             <Select
-              labelId="status-select-label"
               value={status}
               onChange={(e) => setStatus(e.target.value)}
               label="Status"
@@ -220,7 +263,7 @@ export default function AddAssetAssignment({
           <Button
             type="button"
             variant="contained"
-            sx={{ backgroundColor: "#B1B1B1" }}
+            sx={{ backgroundColor: "#B1B1B1", textTransform: "none" }}
             onClick={handleClose}
           >
             Cancel
@@ -234,6 +277,7 @@ export default function AddAssetAssignment({
               color: "var(--white-color)",
               borderRadius: "var(--border-radius-secondary)",
               "&:hover": { background: "var(--vertical-gradient)" },
+              textTransform: "none",
             }}
           >
             Submit

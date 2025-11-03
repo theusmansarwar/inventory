@@ -72,7 +72,7 @@ const StockM = () => {
   const { tableUI } = useTable({
     attributes,
     // pageData: mappedData,
-    tableType: "StockM",
+    tableType: "Stock",
   });
 
   return <div>{tableUI}</div>;

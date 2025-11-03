@@ -92,7 +92,7 @@ export const fetchallSupplierlist = async (page, rowsPerPages,searchQuery) => {
 
 export const fetchallProductlist = async (page, rowsPerPages,searchQuery) => {
   const reqObj = {
-    path: `/product/list?limit=${rowsPerPages}&page=${page}`,
+    path: `/product/list?limit=${rowsPerPages}&page=${page}&keyword=${searchQuery}`,
     method: "GET",
     headers: {
        Authorization: `Bearer ${localStorage.getItem("Token")}`,

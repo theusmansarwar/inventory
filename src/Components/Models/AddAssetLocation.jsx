@@ -213,7 +213,7 @@ export default function AddAssetLocation({
           <Button
             type="button"
             variant="contained"
-            sx={{ backgroundColor: "#B1B1B1" }}
+            sx={{ backgroundColor: "#B1B1B1",   textTransform: "none", }}
             onClick={handleClose}
           >
             Cancel
@@ -226,6 +226,7 @@ export default function AddAssetLocation({
               color: "var(--white-color, #fff)",
               borderRadius: "8px",
               "&:hover": { background: "var(--vertical-gradient, #115293)" },
+                textTransform: "none",
             }}
           >
             Submit

@@ -29,13 +29,13 @@ import DeleteModal from "./confirmDeleteModel";
 import AddUsers from "./addUsers";
 import AddSupplier from "./addSupplier";
 import AddProduct from "./addProduct";
-import AddStockM from "./addStockM";
 import AddAsset from "./AddAssetM";
 import AddLicense from "./AddLicense";
 import AddMaintenance from "./AddMaintenance";
 import AddRoles from "./AddRoles";
 import AddDeadProduct from "./AddDeadProduct";
 import AddAssetLocation from "./AddAssetLocation";
+import AddStock from "./addStockM";
 
 
 
@@ -154,7 +154,7 @@ export function useTable({ attributes,pageData, tableType, limitPerPage = 10 }) 
       }
     }
 
-    else if(tableType === "StockM"){
+    else if(tableType === "Stock"){
     // setData(pageData);
       response = await fetchallStocklist(page, rowsPerPage, searchQuery);
       if (response.status == 400) {
@@ -210,7 +210,7 @@ export function useTable({ attributes,pageData, tableType, limitPerPage = 10 }) 
         setTotalRecords(response.totalPages);
       }
     }
-    else if(tableType === "AssetLocation"){
+    else if(tableType === "Asset Location"){
     // setData(pageData);
       response = await fetchallAssetLocationlist(page, rowsPerPage, searchQuery);
       if (response.status == 400) {
@@ -263,7 +263,7 @@ export function useTable({ attributes,pageData, tableType, limitPerPage = 10 }) 
       setModeltype("Update");
     }
 
-    else if(tableType === "StockM"){
+    else if(tableType === "Stock"){
       setOpenStockModal(true);
      setModelData(category);
       setModeltype("Update");
@@ -291,7 +291,7 @@ export function useTable({ attributes,pageData, tableType, limitPerPage = 10 }) 
        setModelData(category);
       setModeltype("Update");
     }
-      else if (tableType === "AssetLocation") {
+      else if (tableType === "Asset Location") {
       setOpenAssetLocationModal(true);
        setModelData(category);
       setModeltype("Update");
@@ -328,7 +328,7 @@ const handleSearch = () => {
        else if (tableType === "Products") {
         response = await deleteAllProduct({ ids: selected });
       }
-       else if (tableType === "StockM") {
+       else if (tableType === "Stock") {
         response = await deleteAllStock({ ids: selected });
       }
        else if (tableType === "AssetM") {
@@ -343,7 +343,7 @@ const handleSearch = () => {
        else if (tableType === "DeadProduct") {
         response = await deleteAllDeadProduct({ ids: selected });
       }
-       else if (tableType === "AssetLocation") {
+       else if (tableType === "Asset Location") {
         response = await deleteAllAssetLocation({ ids: selected });
       }
       if (response.status === 200) {
@@ -384,7 +384,7 @@ const handleSearch = () => {
       setModelData();
     }
 
-    else if(tableType === "StockM"){
+    else if(tableType === "Stock"){
       setOpenStockModal(true);
       setModeltype("Add");
       setModelData();
@@ -411,7 +411,7 @@ const handleSearch = () => {
       setModeltype("Add");
       setModelData();
     }
-     else if(tableType === "AssetLocation"){
+     else if(tableType === "Asset Location"){
       setOpenAssetLocationModal(true);
       setModeltype("Add");
       setModelData();
@@ -458,6 +458,7 @@ const handleSearch = () => {
           Modeltype={modeltype}
           Modeldata={modelData}
           onResponse={handleResponse}
+         refreshTable={fetchData} 
         />
          <AddProduct
           open={openProductModal}
@@ -466,7 +467,7 @@ const handleSearch = () => {
           Modeldata={modelData}
           onResponse={handleResponse}
         />
-         <AddStockM
+         <AddStock
           open={openStockModal}
           setOpen={setOpenStockModal}
           Modeltype={modeltype}
@@ -529,6 +530,9 @@ const handleSearch = () => {
                     variant="outlined"
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
+                    onKeyPress={(e) => e.key === "Enter" && handleSearch()}
+
+
                     sx={{
                       minWidth: 200,
                       backgroundColor: "white",
@@ -611,129 +615,146 @@ const handleSearch = () => {
                   </TableRow>
                 </TableHead>
 <TableBody>
-  {data.map((row) => {
-    const isItemSelected = isSelected(row._id);
-    return (
-      <TableRow key={row._id} selected={isItemSelected}>
-        {/* Checkbox column */}
-        <TableCell padding="checkbox">
-          <Checkbox
-            sx={{ color: "var(--primary-color)" }}
-            checked={isItemSelected}
-            onChange={() => {
-              setSelected((prev) =>
-                isItemSelected
-                  ? prev.filter((id) => id !== row._id)
-                  : [...prev, row._id]
-              );
-            }}
-          />
-        </TableCell>
-
-        {/* Dynamic columns */}
-        {attributes.map((attr) => (
-          <TableCell
-            key={attr.id}
-            sx={{ color: "var(--black-color)", minWidth: "110px" }}
-          >
-            {attr.id === "createdAt" || attr.id === "publishedDate"  || attr.id === "assignDate"  || attr.id === "resolvedDate"   || attr.id === "reportedDate"  || attr.id === "expiryDate"  || attr.id === "currentDate"  || attr.id === "warrantyDate"?  (
-              formatDate(row[attr.id])
-            ) : attr.id === "published" ? (
-              <span
-                style={{
-                  color: row[attr.id]
-                    ? "var(--success-color)"
-                    : "var(--warning-color)",
-                  background: row[attr.id]
-                    ? "var(--success-bgcolor)"
-                    : "var(--warning-bgcolor)",
-                  padding: "5px 10px",
-                  borderRadius: "var(--border-radius-secondary)",
-                }}
-              >
-                {row[attr.id] ? "Public" : "Private"}
-              </span>
-            ) : attr.id === "status" ? (
-              (() => {
-  let bgColor = "#ffffff"; // default background
-  let textColor = "#000000"; // default text
-
-  // normalize the value
-  let value = row[attr.id];
-  if (value === true) value = "Active";
-  if (value === false) value = "Inactive";
-
-  switch (value) {
-    case "Pending":
-    case "Assigned":
-      bgColor = "#cce5ff"; // light blue
-      textColor = "#004085"; // dark blue
-      break;
-    case "In Progress":
-    case "Delay":
-      bgColor = "#fff3cd"; // light yellow
-      textColor = "#856404"; // dark yellow
-      break;
-    case "Returned":
-    case "Resolved":
-    case "Active":   // covers both string "Active" and true→Active
-      bgColor = "#d4edda"; // light green
-      textColor = "#155724"; // dark green
-      break;
-    case "Damaged":
-    case "Expired":
-    case "Inactive": // covers both string "Inactive" and false→Inactive
-      bgColor = "#f8d7da"; // light red
-      textColor = "#721c24"; // dark red
-      break;
-    default:
-      bgColor = "#e2e3e5"; // fallback light grey
-      textColor = "#383d41"; // fallback dark grey
-  }
-
-  return (
-    <span
-      style={{
-        color: textColor,
-        background: bgColor,
-        padding: "5px 10px",
-        borderRadius: "var(--border-radius-secondary)",
-        fontWeight: "bold",
-      }}
-    >
-      {value}
-    </span>
-  );
-})()
-
-            ) : row[attr.id] === 0 ? (
-              0
-            ) : typeof getNestedValue(row, attr.id) === "string" ? (
-              truncateText(getNestedValue(row, attr.id), 30)
-            ) : (
-              getNestedValue(row, attr.id)
-            )}
+  {data.length === 0 ? (
+    <TableRow>
+      <TableCell
+        colSpan={attributes.length + 2} // +2 for checkbox and Action columns
+        align="center"
+        sx={{ py: 3 }}
+      >
+        <Typography variant="body1" color="textSecondary">
+          No results found
+        </Typography>
+      </TableCell>
+    </TableRow>
+  ) : (
+    data.map((row) => {
+      const isItemSelected = isSelected(row._id);
+      return (
+        <TableRow key={row._id} selected={isItemSelected}>
+          {/* Checkbox column */}
+          <TableCell padding="checkbox">
+            <Checkbox
+              sx={{ color: "var(--primary-color)" }}
+              checked={isItemSelected}
+              onChange={() => {
+                setSelected((prev) =>
+                  isItemSelected
+                    ? prev.filter((id) => id !== row._id)
+                    : [...prev, row._id]
+                );
+              }}
+            />
           </TableCell>
-        ))}
 
-        {/* View button column */}
-        <TableCell>
-          <span
-            onClick={() => handleviewClick(row)}
-            style={{
-              color: "var(--primary-color)",
-              textDecoration: "underline",
-              cursor: "pointer",
-            }}
-          >
-            view
-          </span>
-        </TableCell>
-      </TableRow>
-    );
-  })}
+          {/* Dynamic columns */}
+          {attributes.map((attr) => (
+            <TableCell
+              key={attr.id}
+              sx={{ color: "var(--black-color)", minWidth: "110px" }}
+            >
+              {attr.id === "createdAt" ||
+              attr.id === "publishedDate" ||
+              attr.id === "assignDate" ||
+              attr.id === "resolvedDate" ||
+              attr.id === "reportedDate" ||
+              attr.id === "expiryDate" ||
+              attr.id === "currentDate" ||
+              attr.id === "warrantyDate" ? (
+                formatDate(row[attr.id])
+              ) : attr.id === "published" ? (
+                <span
+                  style={{
+                    color: row[attr.id]
+                      ? "var(--success-color)"
+                      : "var(--warning-color)",
+                    background: row[attr.id]
+                      ? "var(--success-bgcolor)"
+                      : "var(--warning-bgcolor)",
+                    padding: "5px 10px",
+                    borderRadius: "var(--border-radius-secondary)",
+                  }}
+                >
+                  {row[attr.id] ? "Public" : "Private"}
+                </span>
+              ) : attr.id === "status" ? (
+                (() => {
+                  let bgColor = "#ffffff";
+                  let textColor = "#000000";
+                  let value = row[attr.id];
+                  if (value === true) value = "Active";
+                  if (value === false) value = "Inactive";
+
+                  switch (value) {
+                    case "Pending":
+                    case "Assigned":
+                      bgColor = "#cce5ff";
+                      textColor = "#004085";
+                      break;
+                    case "In Progress":
+                    case "Delay":
+                      bgColor = "#fff3cd";
+                      textColor = "#856404";
+                      break;
+                    case "Returned":
+                    case "Resolved":
+                    case "Active":
+                      bgColor = "#d4edda";
+                      textColor = "#155724";
+                      break;
+                    case "Damaged":
+                    case "Expired":
+                    case "Inactive":
+                      bgColor = "#f8d7da";
+                      textColor = "#721c24";
+                      break;
+                    default:
+                      bgColor = "#e2e3e5";
+                      textColor = "#383d41";
+                  }
+
+                  return (
+                    <span
+                      style={{
+                        color: textColor,
+                        background: bgColor,
+                        padding: "5px 10px",
+                        borderRadius: "var(--border-radius-secondary)",
+                        fontWeight: "bold",
+                      }}
+                    >
+                      {value}
+                    </span>
+                  );
+                })()
+              ) : row[attr.id] === 0 ? (
+                0
+              ) : typeof getNestedValue(row, attr.id) === "string" ? (
+                truncateText(getNestedValue(row, attr.id), 30)
+              ) : (
+                getNestedValue(row, attr.id)
+              )}
+            </TableCell>
+          ))}
+
+          {/* View button column */}
+          <TableCell>
+            <span
+              onClick={() => handleviewClick(row)}
+              style={{
+                color: "var(--primary-color)",
+                textDecoration: "underline",
+                cursor: "pointer",
+              }}
+            >
+              view
+            </span>
+          </TableCell>
+        </TableRow>
+      );
+    })
+  )}
 </TableBody>
-
 
               </Table>
             </TableContainer>

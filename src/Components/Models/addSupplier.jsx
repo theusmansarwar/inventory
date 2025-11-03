@@ -41,15 +41,13 @@ export default function AddSupplier({
   const [id, setId] = React.useState("");
   const [errors, setErrors] = React.useState({});
 
-  // ✅ Handle Modeldata (prefill on view/edit)
+  // ✅ Prefill when editing
   React.useEffect(() => {
     if (Modeldata) {
       setName(Modeldata?.name || "");
       setContact(Modeldata?.contact || "");
       setEmail(Modeldata?.email || "");
       setAddress(Modeldata?.address || "");
-
-      // ✅ Convert boolean → string so Select can match
       setStatus(
         Modeldata?.status === true
           ? "true"
@@ -57,10 +55,9 @@ export default function AddSupplier({
           ? "false"
           : Modeldata?.status || ""
       );
-
       setId(Modeldata?._id || "");
     } else {
-      // ✅ Reset all fields when adding a new supplier
+      // Reset fields when adding new
       setName("");
       setContact("");
       setEmail("");
@@ -68,61 +65,91 @@ export default function AddSupplier({
       setStatus("");
       setId("");
     }
-  }, [Modeldata]);
+    setErrors({});
+  }, [Modeldata, open]);
 
   const handleClose = () => setOpen(false);
 
+  // ✅ Email validation
+  const isValidEmail = (email) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+
   // ✅ Submit Handler
-  const handleSubmit = async (e) => {
-    e.preventDefault();
+const handleSubmit = async (e) => {
+  e.preventDefault();
+  const validationErrors = {};
 
-    const supplierData = {
-      name,
-      contact,
-      email,
-      address,
-      // Convert string → boolean before sending
-      status: status === "true",
-    };
+  if (!name.trim()) validationErrors.name = "Name is required";
+  if (!contact.trim()) validationErrors.contact = "Contact is required";
+  if (!email.trim()) {
+    validationErrors.email = "Email is required";
+  } else if (!isValidEmail(email)) {
+    validationErrors.email = "Invalid email format";
+  }
+  if (!address.trim()) validationErrors.address = "Address is required";
 
-    try {
-      let response;
-      if (Modeltype === "Add") {
-        response = await createSupplier(supplierData);
-      } else {
-        response = await updateSupplier(id, supplierData);
-      }
+  // ✅ Fixed status validation
+  if (status !== "true" && status !== "false") {
+    validationErrors.status = "Status is required";
+  }
 
-      if (response?.status === 201 || response?.status === 200) {
-        onResponse({ messageType: "success", message: response.message });
-        setErrors({});
-        setOpen(false);
+  if (Object.keys(validationErrors).length > 0) {
+    setErrors(validationErrors);
+    return;
+  }
 
-        // ✅ Clear form fields after successful add/update
-        setName("");
-        setContact("");
-        setEmail("");
-        setAddress("");
-        setStatus("");
-        setId("");
-      } else if (response?.status === 400 && response?.missingFields) {
-        const fieldErrors = {};
+  const supplierData = {
+    name,
+    contact,
+    email,
+    address,
+    status: status === "true",
+  };
+
+  try {
+    let response;
+    if (Modeltype === "Add") {
+      response = await createSupplier(supplierData);
+    } else {
+      response = await updateSupplier(id, supplierData);
+    }
+
+    if (response?.status === 201 || response?.status === 200) {
+      onResponse({ messageType: "success", message: response.message });
+      setErrors({});
+      setOpen(false);
+    } else if (response?.status === 400) {
+      const fieldErrors = {};
+      if (response?.missingFields?.length > 0) {
         response.missingFields.forEach((f) => {
           fieldErrors[f.name] = f.message;
         });
-        setErrors(fieldErrors);
+      } else if (response?.message?.toLowerCase().includes("email")) {
+        fieldErrors.email = "This email already exists";
       } else {
-        onResponse({ messageType: "error", message: response?.message });
+        fieldErrors.general = response.message || "Something went wrong";
       }
-    } catch (err) {
-      console.error("❌ Error:", err);
+      setErrors(fieldErrors);
+    } else {
+      onResponse({
+        messageType: "error",
+        message: response?.message || "Unknown error",
+      });
+    }
+  } catch (err) {
+    console.error("❌ Error:", err);
+    if (
+      err.response?.data?.message &&
+      err.response?.data?.message.toLowerCase().includes("email")
+    ) {
+      setErrors({ email: "This email already exists" });
+    } else {
       onResponse({
         messageType: "error",
         message: err.response?.data?.message || "Server error",
       });
     }
-  };
-
+  }
+};
   return (
     <Modal open={open} onClose={handleClose}>
       <Box sx={style}>
@@ -170,7 +197,7 @@ export default function AddSupplier({
           />
         </Box>
 
-        {/* Status Dropdown */}
+        {/* Status */}
         <Box sx={{ display: "flex", gap: 2, mt: 2 }}>
           <FormControl fullWidth variant="outlined" error={!!errors.status}>
             <InputLabel id="status-select-label">Status</InputLabel>
@@ -191,18 +218,14 @@ export default function AddSupplier({
         </Box>
 
         {/* Buttons */}
-        <Box
-          sx={{
-            display: "flex",
-            gap: 2,
-            justifyContent: "flex-end",
-            mt: 3,
-          }}
-        >
+        <Box sx={{ display: "flex", gap: 2, justifyContent: "flex-end", mt: 3 }}>
           <Button
             type="button"
             variant="contained"
-            sx={{ backgroundColor: "#B1B1B1" }}
+            sx={{
+              backgroundColor: "#B1B1B1",
+              textTransform: "none",
+            }}
             onClick={handleClose}
           >
             Cancel
@@ -216,12 +239,21 @@ export default function AddSupplier({
               color: "var(--white-color)",
               borderRadius: "var(--border-radius-secondary)",
               "&:hover": { background: "var(--vertical-gradient)" },
+              textTransform: "none",
             }}
           >
             Submit
           </Button>
         </Box>
+
+        {/* Generic error */}
+        {errors.general && (
+          <Typography color="error" sx={{ mt: 2 }}>
+            {errors.general}
+          </Typography>
+        )}
       </Box>
     </Modal>
   );
 }
+  

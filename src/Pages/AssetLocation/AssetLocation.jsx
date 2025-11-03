@@ -22,7 +22,7 @@ const AssetLocation = () => {
   const { tableUI } = useTable({ 
     attributes,
     //  pageData: assetLocationData,
-      tableType: "AssetLocation" });
+      tableType: "Asset Location" });
 
   return <div>{tableUI}</div>;
 };

@@ -166,7 +166,7 @@ export function useTable({ attributes,pageData, tableType, limitPerPage = 10 }) 
       }
     }
 
-     else if(tableType === "AssetM"){
+     else if(tableType === "Assignment"){
     // setData(pageData);
       response = await fetchallAssetMlist(page, rowsPerPage, searchQuery);
       if (response.status == 400) {
@@ -269,7 +269,7 @@ export function useTable({ attributes,pageData, tableType, limitPerPage = 10 }) 
       setModeltype("Update");
     }
 
-     else if(tableType === "AssetM"){
+     else if(tableType === "Assignment"){
       setOpenAssetModal(true);
       setModelData(category);
       setModeltype("Update");
@@ -331,7 +331,7 @@ const handleSearch = () => {
        else if (tableType === "Stock") {
         response = await deleteAllStock({ ids: selected });
       }
-       else if (tableType === "AssetM") {
+       else if (tableType === "Assignment") {
         response = await deleteAllAssetM({ ids: selected });
       }
       else if (tableType === "LicenseM") {
@@ -389,7 +389,7 @@ const handleSearch = () => {
       setModeltype("Add");
       setModelData();
     }
-     else if(tableType === "AssetM"){
+     else if(tableType === "Assignment"){
       setOpenAssetModal(true);
       setModeltype("Add");
       setModelData();

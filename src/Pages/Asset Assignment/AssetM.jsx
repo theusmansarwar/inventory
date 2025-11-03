@@ -55,7 +55,7 @@ const AssetM = () => {
   const { tableUI } = useTable({
     attributes,
     // pageData: assetData,
-    tableType: "AssetM",
+    tableType: "Assignment",
   });
 
   return <div>{tableUI}</div>;

@@ -14,8 +14,7 @@ import {
 import { createProduct } from "../../DAL/create";
 import { updateProduct } from "../../DAL/edit";
 
-
-const style = { 
+const style = {
   position: "absolute",
   top: "50%",
   left: "50%",
@@ -27,7 +26,7 @@ const style = {
   borderRadius: "12px",
 };
 
-// Dummy categories list (baad mein API se bhi laa sakte ho)
+// Dummy categories list (can be replaced later with API)
 const categories = ["Hardware", "Software", "License"];
 
 export default function AddProduct({
@@ -40,6 +39,7 @@ export default function AddProduct({
   const [productName, setProductName] = React.useState(Modeldata?.productName || "");
   const [category, setCategory] = React.useState(Modeldata?.category || "");
   const [status, setStatus] = React.useState(Modeldata?.status || "");
+  const [description, setDescription] = React.useState(Modeldata?.description || "");
   const [id, setId] = React.useState(Modeldata?._id || "");
   const [errors, setErrors] = React.useState({});
 
@@ -47,51 +47,61 @@ export default function AddProduct({
     setProductName(Modeldata?.productName || "");
     setCategory(Modeldata?.category || "");
     setStatus(Modeldata?.status || "");
+    setDescription(Modeldata?.description || "");
     setId(Modeldata?._id || "");
     setErrors({});
   }, [Modeldata]);
 
   const handleClose = () => setOpen(false);
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
+const handleSubmit = async (e) => {
+  e.preventDefault();
 
-    const productData = {
-      productName,
-      category,
-      status,
-    };
-
-    try {
-      let response;
-      if (Modeltype === "Add") {
-        response = await createProduct(productData);
-      } else {
-        response = await updateProduct(id, productData);
-      }
-
-      if (response?.status === 201 || response?.status === 200) {
-        onResponse({ messageType: "success", message: response.message });
-        setErrors({});
-        setOpen(false);
-      } else if (response?.status === 400 && response?.missingFields) {
-        // 🔴 API sent missing fields
-        const fieldErrors = {};
-        response.missingFields.forEach((f) => {
-          fieldErrors[f.name] = f.message;
-        });
-        setErrors(fieldErrors);
-      } else {
-        onResponse({ messageType: "error", message: response?.message });
-      }
-    } catch (err) {
-      console.error("❌ Error:", err);
-      onResponse({
-        messageType: "error",
-        message: err.response?.data?.message || "Server error",
-      });
-    }
+  const productData = {
+    productName,
+    category,
+    status,
+    description: description.trim() !== "" ? description : "N/A", // ✅ default N/A
   };
+
+  try {
+    let response;
+    if (Modeltype === "Add") {
+      response = await createProduct(productData);
+    } else {
+      response = await updateProduct(id, productData);
+    }
+
+    if (response?.status === 201 || response?.status === 200) {
+      onResponse({ messageType: "success", message: response.message });
+      setErrors({});
+
+      // Clear fields
+      setProductName("");
+      setCategory("");
+      setStatus("");
+      setDescription("");
+
+      // Close modal
+      setOpen(false);
+    } else if (response?.status === 400 && response?.missingFields) {
+      const fieldErrors = {};
+      response.missingFields.forEach((f) => {
+        fieldErrors[f.name] = f.message;
+      });
+      setErrors(fieldErrors);
+    } else {
+      onResponse({ messageType: "error", message: response?.message });
+    }
+  } catch (err) {
+    console.error("❌ Error:", err);
+    onResponse({
+      messageType: "error",
+      message: err.response?.data?.message || "Server error",
+    });
+  }
+};
+
 
   return (
     <Modal open={open} onClose={handleClose}>
@@ -109,6 +119,20 @@ export default function AddProduct({
             onChange={(e) => setProductName(e.target.value)}
             error={!!errors.productName}
             helperText={errors.productName}
+          />
+        </Box>
+
+        {/* Description */}
+        <Box sx={{ display: "flex", gap: 2, mt: 2 }}>
+          <TextField
+            fullWidth
+            multiline
+            minRows={3}
+            label="Description"
+            value={description}
+            onChange={(e) => setDescription(e.target.value)}
+            error={!!errors.description}
+            helperText={errors.description}
           />
         </Box>
 
@@ -162,7 +186,7 @@ export default function AddProduct({
           <Button
             type="button"
             variant="contained"
-            sx={{ backgroundColor: "#B1B1B1" ,  textTransform: "none",}}
+            sx={{ backgroundColor: "#B1B1B1", textTransform: "none" }}
             onClick={handleClose}
           >
             Cancel
@@ -176,7 +200,7 @@ export default function AddProduct({
               color: "var(--white-color)",
               borderRadius: "var(--border-radius-secondary)",
               "&:hover": { background: "var(--vertical-gradient)" },
-               textTransform: "none",
+              textTransform: "none",
             }}
           >
             Submit

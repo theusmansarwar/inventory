@@ -30,11 +30,11 @@ import Products from "./Pages/Product M/Products";
 import StockM from "./Pages/Stock M/StockM";
 import AssetM from "./Pages/Asset Assignment/AssetM";
 import Maintenance from "./Pages/Maintenance/Maintenance";
-import LicenseM from "./Pages/License M/LicenseM";
 import Roles from "./Pages/Roles/Roles";
 import DeadProduct from "./Pages/Dead Products/DeadProducts";
 import AssetLocation from "./Pages/AssetLocation/AssetLocation";
 import logo from "./Assets/imslogo.png";
+import { Tooltip } from "@mui/material";
 
 const App = ({ onLogout }) => {
   const navigate = useNavigate();
@@ -52,7 +52,7 @@ const App = ({ onLogout }) => {
     { id: 5, name: "Products", route: "/productData", icon: <GiCardboardBox /> },
     { id: 6, name: "Stock Management", route: "/stockData", icon: <FaWarehouse /> },
     { id: 7, name: "Asset Assignment", route: "/AssetData", icon: <FaBoxes /> },
-    { id: 8, name: "License Management", route: "/licenseData", icon: <FaCogs /> },
+    // { id: 8, name: "License Management", route: "/licenseData", icon: <FaCogs /> },
     { id: 9, name: "Maintenance", route: "/maintenanceData", icon: <FaTools /> },
     { id: 10, name: "Dead Products", route: "/deadProduct", icon: <FaRecycle /> },
     { id: 11, name: "Asset Location", route: "/AssetLocation", icon: <FaMapMarkerAlt /> },
@@ -74,14 +74,18 @@ const App = ({ onLogout }) => {
   );
 
   // ✅ Redirect automatically to first allowed route if dashboard isn’t in list
-  useEffect(() => {
-    if (filteredItems.length > 0) {
-      const onDashboard = location.pathname === "/" || location.pathname === "/dashboard";
-      if (onDashboard && !userModules.includes("Dashboard")) {
-        navigate(filteredItems[0].route, { replace: true });
-      }
-    }
-  }, [filteredItems, userModules, location.pathname, navigate]);
+ // ✅ Remove this old redirect logic
+useEffect(() => {
+  if (filteredItems.length > 0) {
+    const onDashboard =
+      location.pathname === "/" || location.pathname === "/dashboard";
+    // don't automatically navigate on reload
+    // if (onDashboard && !userModules.includes("Dashboard")) {
+    //   navigate(filteredItems[0].route, { replace: true });
+    // }
+  }
+}, [filteredItems, userModules, location.pathname, navigate]);
+
 
   // ✅ Update active item when route changes
   useEffect(() => {
@@ -99,16 +103,19 @@ const App = ({ onLogout }) => {
   const toggleMenu = () => {
     setIsOpen((prev) => !prev);
   };
-
-  // ✅ Inline route protection
+useEffect(() => {
+  localStorage.setItem("lastRoute", location.pathname);
+}, [location.pathname]);
+ 
   const ProtectedElement = ({ element, moduleName }) => {
-    if (!userModules.includes(moduleName)) {
-      // redirect to first allowed module instead of dashboard
-      const firstAllowed = filteredItems[0]?.route || "/login";
-      return <Navigate to={firstAllowed} replace />;
-    }
-    return element;
-  };
+  if (!userModules.includes(moduleName)) {
+    // only redirect if current path is invalid for user
+    const firstAllowed = filteredItems[0]?.route || "/login";
+    return <Navigate to={firstAllowed} replace />;
+  }
+  return element;
+};
+
 
   return (
     <div className="App">
@@ -120,22 +127,45 @@ const App = ({ onLogout }) => {
 
         <img src={logo} className="logo" alt="ims Logo" />
 
-        <ul>
-          {filteredItems.map((item) => (
-            <li
-              key={item.id}
-              className={activeitems === item.id ? "selected-item" : "unselected"}
-              onClick={() => handleitemsClick(item)}
-            >
-              {item.icon}
-              {isOpen && <span>{item.name}</span>}
-            </li>
-          ))}
-          <li className="unselected" onClick={onLogout}>
-            <IoLogOut />
-            {isOpen && <span>Logout</span>}
-          </li>
-        </ul>
+       <ul>
+  {filteredItems.map((item) => {
+    const listItem = (
+      <li
+        key={item.id}
+        className={activeitems === item.id ? "selected-item" : "unselected"}
+        onClick={() => handleitemsClick(item)}
+      >
+        {item.icon}
+        {isOpen && <span>{item.name}</span>}
+      </li>
+    );
+
+    // 👇 Tooltip only when sidebar is closed
+    return !isOpen ? (
+      <Tooltip title={item.name} placement="right" key={item.id} arrow>
+        {listItem}
+      </Tooltip>
+    ) : (
+      listItem
+    );
+  })}
+
+  {/* Logout item */}
+  {!isOpen ? (
+    <Tooltip title="Logout" placement="right" arrow>
+      <li className="unselected" onClick={onLogout}>
+        <IoLogOut />
+        {isOpen && <span>Logout</span>}
+      </li>
+    </Tooltip>
+  ) : (
+    <li className="unselected" onClick={onLogout}>
+      <IoLogOut />
+      {isOpen && <span>Logout</span>}
+    </li>
+  )}
+</ul>
+
       </div>
 
       {/* Right Side Content / Routes */}
@@ -168,10 +198,6 @@ const App = ({ onLogout }) => {
           <Route
             path="/AssetData"
             element={<ProtectedElement element={<AssetM />} moduleName="Asset Assignment" />}
-          />
-          <Route
-            path="/licenseData"
-            element={<ProtectedElement element={<LicenseM />} moduleName="License Management" />}
           />
           <Route
             path="/maintenanceData"

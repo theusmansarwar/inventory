@@ -30,7 +30,7 @@ import AddUsers from "./addUsers";
 import AddSupplier from "./addSupplier";
 import AddProduct from "./addProduct";
 import AddAsset from "./AddAssetM";
-import AddLicense from "./AddLicense";
+// import AddLicense from "./AddLicense";
 import AddMaintenance from "./AddMaintenance";
 import AddRoles from "./AddRoles";
 import AddDeadProduct from "./AddDeadProduct";
@@ -62,7 +62,7 @@ export function useTable({ attributes,pageData, tableType, limitPerPage = 10 }) 
     const [openProductModal, setOpenProductModal] = useState(false);
     const [openStockModal, setOpenStockModal] = useState(false);
     const [openAssetModal, setOpenAssetModal] = useState(false);
-    const [openLicenseModal, setOpenLicenseModal] = useState(false);
+    // const [openLicenseModal, setOpenLicenseModal] = useState(false);
     const [openMaintenanceModal, setOpenMaintenanceModal] = useState(false);
   const [modeltype, setModeltype] = useState("Add");
   const [modelData, setModelData] = useState({});
@@ -177,17 +177,17 @@ export function useTable({ attributes,pageData, tableType, limitPerPage = 10 }) 
         setTotalRecords(response.totalPages);
       }
     }
-     else if(tableType === "LicenseM"){
-    // setData(pageData);
-      response = await fetchallLicenseMlist(page, rowsPerPage, searchQuery);
-      if (response.status == 400) {
-        localStorage.removeItem("Token");
-        navigate("/login");
-      } else {
-        setData(response.data);
-        setTotalRecords(response.totalRecords);
-      }
-    }
+    //  else if(tableType === "LicenseM"){
+    // // setData(pageData);
+    //   response = await fetchallLicenseMlist(page, rowsPerPage, searchQuery);
+    //   if (response.status == 400) {
+    //     localStorage.removeItem("Token");
+    //     navigate("/login");
+    //   } else {
+    //     setData(response.data);
+    //     setTotalRecords(response.totalRecords);
+    //   }
+    // }
       else if(tableType === "Maintenance"){
     // setData(pageData);
       response = await fetchallMaintenancelist(page, rowsPerPage, searchQuery);
@@ -275,11 +275,11 @@ export function useTable({ attributes,pageData, tableType, limitPerPage = 10 }) 
       setModeltype("Update");
     }
 
-     else if(tableType === "LicenseM"){
-      setOpenLicenseModal(true);
-      setModelData(category);
-      setModeltype("Update");
-    }
+    //  else if(tableType === "LicenseM"){
+    //   setOpenLicenseModal(true);
+    //   setModelData(category);
+    //   setModeltype("Update");
+    // }
 
     else if(tableType === "Maintenance"){
       setOpenMaintenanceModal(true);
@@ -334,9 +334,9 @@ const handleSearch = () => {
        else if (tableType === "Assignment") {
         response = await deleteAllAssetM({ ids: selected });
       }
-      else if (tableType === "LicenseM") {
-        response = await deleteAllLicenseM({ ids: selected });
-      }
+      // else if (tableType === "LicenseM") {
+      //   response = await deleteAllLicenseM({ ids: selected });
+      // }
        else if (tableType === "Maintenance") {
         response = await deleteAllMaintenance({ ids: selected });
       }
@@ -395,11 +395,11 @@ const handleSearch = () => {
       setModelData();
     }
 
-     else if(tableType === "LicenseM"){
-      setOpenLicenseModal(true);
-      setModeltype("Add");
-      setModelData();
-    }
+    //  else if(tableType === "LicenseM"){
+    //   setOpenLicenseModal(true);
+    //   setModeltype("Add");
+    //   setModelData();
+    // }
 
     else if(tableType === "Maintenance"){
       setOpenMaintenanceModal(true);
@@ -481,13 +481,13 @@ const handleSearch = () => {
           Modeldata={modelData}
           onResponse={handleResponse}
         />
-         <AddLicense
+         {/* <AddLicense
           open={openLicenseModal}
           setOpen={setOpenLicenseModal}
           Modeltype={modeltype}
           Modeldata={modelData}
           onResponse={handleResponse}
-        />
+        /> */}
           <AddMaintenance
           open={openMaintenanceModal}
           setOpen={setOpenMaintenanceModal}

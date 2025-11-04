@@ -15,8 +15,10 @@ const Products = () => {
     // { id: "_id", label: "Product Id" },
     { id: "productName", label: "Product Name" },
     { id: "productId", label: "Product ID" },
-     { id: "category", label: "Category" },
+    { id: "category", label: "Category" },
+    { id: "description", label: "Description" },
     { id: "status", label: "Status" },
+
   ];
 
   const { tableUI } = useTable({

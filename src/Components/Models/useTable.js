@@ -38,9 +38,6 @@ import AddAssetLocation from "./AddAssetLocation";
 import AddStock from "./addStockM";
 
 
-
-
-
 export function useTable({ attributes,pageData, tableType, limitPerPage = 10 }) {
   const { showAlert } = useAlert(); // Since you created a custom hook
   const savedState =
@@ -587,33 +584,40 @@ const handleSearch = () => {
             </Toolbar>
             <TableContainer>
               <Table stickyHeader>
-                <TableHead>
-                  <TableRow>
-                    <TableCell padding="checkbox">
-                      <Checkbox
-                        sx={{ color: "var(--primary-color)" }}
-                        indeterminate={
-                          selected.length > 0 && selected.length < data.length
-                        }
-                        checked={
-                          data.length > 0 && selected.length === data.length
-                        }
-                        onChange={handleSelectAllClick}
-                      />
-                    </TableCell>
-                    {attributes.map((attr) => (
-                      <TableCell
-                        key={attr._id}
-                        sx={{ color: "var(--secondary-color)" }}
-                      >
-                        {attr.label}
-                      </TableCell>
-                    ))}
-                    <TableCell sx={{ color: "var(--secondary-color)" }}>
-                      Action
-                    </TableCell>
-                  </TableRow>
-                </TableHead>
+<TableHead>
+  <TableRow>
+    <TableCell padding="checkbox">
+      <Checkbox
+        sx={{ color: "var(--primary-color)" }}
+        indeterminate={selected.length > 0 && selected.length < data.length}
+        checked={data.length > 0 && selected.length === data.length}
+        onChange={handleSelectAllClick}
+      />
+    </TableCell>
+
+    {attributes.map((attr) => (
+      <TableCell
+        key={attr._id}
+        sx={{
+          color: "var(--secondary-color)",
+          fontWeight: "bold", // ✅ make header bold
+        }}
+      >
+        {attr.label}
+      </TableCell>
+    ))}
+
+    <TableCell
+      sx={{
+        color: "var(--secondary-color)",
+        fontWeight: "bold", // ✅ bold Action column
+      }}
+    >
+      Action
+    </TableCell>
+  </TableRow>
+</TableHead>
+
 <TableBody>
   {data.length === 0 ? (
     <TableRow>

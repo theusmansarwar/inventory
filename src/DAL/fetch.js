@@ -15,7 +15,7 @@ export const fetchcategorylist = async () => {
 
 export const fetchDashboard = async () => {
   const reqObj = {
-    path: "/admin/stats",
+    path: "/stats/dashboard",
     method: "GET",
     headers: {
       Authorization: `Bearer ${localStorage.getItem("Token")}`,

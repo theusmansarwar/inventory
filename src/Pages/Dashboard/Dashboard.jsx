@@ -1,9 +1,16 @@
 import React, { useEffect, useState } from "react";
-import { HiMiniUsers } from "react-icons/hi2";
-import { FaBook, FaRegEye, FaRegUser } from "react-icons/fa6";
-import { IoMdStats } from "react-icons/io";
-import { MdOutlineArticle, MdOutlineInsertComment } from "react-icons/md";
-
+import {
+  FaTachometerAlt,
+  FaUsers,
+  FaWarehouse,
+  FaBoxes,
+  FaTools,
+  FaUserShield,
+  FaBuilding,
+  FaRecycle,
+  FaMapMarkerAlt,
+} from "react-icons/fa";
+import { GiCardboardBox } from "react-icons/gi";
 import "./Dashboard.css";
 import { fetchDashboard } from "../../DAL/fetch";
 import Areachart from "../../Components/Areachart";
@@ -28,87 +35,96 @@ const Dashboard = () => {
   return (
     <>
       <h2 className="dashboard-text">Dashboard</h2>
-      
+
       {/* ✅ Only Render When Data is Available */}
       {data && (
         <>
           <div className="cards">
+            {/* 1️⃣ Roles */}
             <div className="card0">
-              <HiMiniUsers className="card-icon" />
+              <FaUserShield className="card-icon" />
               <div className="card-lower-section">
-                <h3>{data.todayLeads}</h3>
-                <p>Today Leads</p>
+                <h3>{data.totalRoles}</h3>
+                <p>Total Roles</p>
               </div>
             </div>
+
+            {/* 2️⃣ Users */}
             <div className="card2">
-              <HiMiniUsers className="card-icon" />
-              <div className="card-lower-section">
-                <h3>{data.yesterdayLeads}</h3>
-                <p>Yesterday Leads</p>
-              </div>
-            </div>
-            <div className="card3">
-              <HiMiniUsers className="card-icon" />
-              <div className="card-lower-section">
-                <h3>{data.totalLeads}</h3>
-                <p>Total Leads</p>
-              </div>
-            </div>
-            <div className="card4">
-              <MdOutlineArticle className="card-icon" />
-              <div className="card-lower-section">
-                <h3>{data.totalBlogs}</h3>
-                <p>Total Blogs</p>
-              </div>
-            </div>
-            <div className="card5">
-              <MdOutlineInsertComment className="card-icon" />
-              <div className="card-lower-section">
-                <h3>{data.totalComments}</h3>
-                <p>Total Comments</p>
-              </div>
-            </div>
-            <div className="card0">
-              <FaRegEye className="card-icon" />
-              <div className="card-lower-section">
-                <h3>{data.todayImpression}</h3>
-                <p>Today Impressions</p>
-              </div>
-            </div>
-            <div className="card2">
-              <FaRegEye className="card-icon" />
-              <div className="card-lower-section">
-                <h3>{data.yesterdayImpression}</h3>
-                <p>Yesterday Impressions</p>
-              </div>
-            </div>
-            <div className="card3">
-              <FaRegEye className="card-icon" />
-              <div className="card-lower-section">
-                <h3>{data.totalImpressions}</h3>
-                <p>All Time Impressions</p>
-              </div>
-            </div>
-            <div className="card4">
-              <FaRegUser className="card-icon" />
+              <FaUsers className="card-icon" />
               <div className="card-lower-section">
                 <h3>{data.totalUsers}</h3>
                 <p>Total Users</p>
               </div>
             </div>
-            <div className="card5">
-              <IoMdStats className="card-icon" />
+
+            {/* 3️⃣ Suppliers */}
+            <div className="card3">
+              <FaBuilding className="card-icon" />
               <div className="card-lower-section">
-                <h3>{data.totalServices}</h3>
-                <p>Total Services</p>
+                <h3>{data.totalSuppliers}</h3>
+                <p>Total Suppliers</p>
+              </div>
+            </div>
+
+            {/* 4️⃣ Products */}
+            <div className="card4">
+              <GiCardboardBox className="card-icon" />
+              <div className="card-lower-section">
+                <h3>{data.totalProducts}</h3>
+                <p>Total Products</p>
+              </div>
+            </div>
+
+            {/* 5️⃣ Stock Management */}
+            <div className="card5">
+              <FaWarehouse className="card-icon" />
+              <div className="card-lower-section">
+                <h3>{data.totalStock}</h3>
+                <p>Total Stock</p>
+              </div>
+            </div>
+
+            {/* 6️⃣ Asset Assignment */}
+            <div className="card0">
+              <FaBoxes className="card-icon" />
+              <div className="card-lower-section">
+                <h3>{data.totalAssets}</h3>
+                <p>Total Assets</p>
+              </div>
+            </div>
+
+            {/* 7️⃣ Maintenance */}
+            <div className="card2">
+              <FaTools className="card-icon" />
+              <div className="card-lower-section">
+                <h3>{data.totalMaintenance}</h3>
+                <p>Total Maintenance</p>
+              </div>
+            </div>
+
+            {/* 8️⃣ Dead Products */}
+            <div className="card4">
+              <FaRecycle className="card-icon" />
+              <div className="card-lower-section">
+                <h3>{data.totalDeadProducts}</h3>
+                <p>Total Dead Products</p>
+              </div>
+            </div>
+
+            {/* 9️⃣ Asset Location */}
+            <div className="card5">
+              <FaMapMarkerAlt className="card-icon" />
+              <div className="card-lower-section">
+                <h3>{data.totalAssetLocations}</h3>
+                <p>Total Asset Locations</p>
               </div>
             </div>
           </div>
 
-          {/* ✅ Render Areachart in the Correct Div */}
+          {/* ✅ Chart Area */}
           <div className="charts-areas">
-              <Areachart />
-           
+            <Areachart />
           </div>
         </>
       )}

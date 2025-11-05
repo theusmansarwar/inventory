@@ -14,17 +14,19 @@ import { GiCardboardBox } from "react-icons/gi";
 import "./Dashboard.css";
 import { fetchDashboard } from "../../DAL/fetch";
 import Areachart from "../../Components/Areachart";
+import Skeleton from "../Skeleton/Skeleton";
 
 const Dashboard = () => {
   const [data, setData] = useState(null);
-
   const getStats = async () => {
+  
     try {
       const response = await fetchDashboard();
       console.log("DASHBOARD DATA IS ", response);
       setData(response);
     } catch (error) {
       console.error("Error fetching dashboard stats:", error);
+      
     }
   };
 
@@ -32,12 +34,16 @@ const Dashboard = () => {
     getStats();
   }, []);
 
+ 
+
+
+
   return (
     <>
       <h2 className="dashboard-text">Dashboard</h2>
 
       {/* ✅ Only Render When Data is Available */}
-      {data && (
+      {data ? (
         <>
           <div className="cards">
             {/* 1️⃣ Roles */}
@@ -127,6 +133,8 @@ const Dashboard = () => {
             <Areachart />
           </div>
         </>
+      ): (
+<Skeleton/>
       )}
     </>
   );

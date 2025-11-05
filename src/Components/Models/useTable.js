@@ -585,10 +585,23 @@ const handleSearch = () => {
             <TableContainer>
               <Table stickyHeader>
 <TableHead>
-  <TableRow>
+  <TableRow
+    sx={{
+      "& th": {
+        backgroundColor: "var(--primary-color)", // 💙 your theme color
+        color: "white",
+        fontWeight: "bold",
+        textTransform: "uppercase",
+        letterSpacing: "0.5px",
+      },
+    }}
+  >
     <TableCell padding="checkbox">
       <Checkbox
-        sx={{ color: "var(--primary-color)" }}
+        sx={{
+          color: "white",
+          "&.Mui-checked": { color: "white" },
+        }}
         indeterminate={selected.length > 0 && selected.length < data.length}
         checked={data.length > 0 && selected.length === data.length}
         onChange={handleSelectAllClick}
@@ -596,25 +609,10 @@ const handleSearch = () => {
     </TableCell>
 
     {attributes.map((attr) => (
-      <TableCell
-        key={attr._id}
-        sx={{
-          color: "var(--secondary-color)",
-          fontWeight: "bold", // ✅ make header bold
-        }}
-      >
-        {attr.label}
-      </TableCell>
+      <TableCell key={attr._id}>{attr.label}</TableCell>
     ))}
 
-    <TableCell
-      sx={{
-        color: "var(--secondary-color)",
-        fontWeight: "bold", // ✅ bold Action column
-      }}
-    >
-      Action
-    </TableCell>
+    <TableCell>Action</TableCell>
   </TableRow>
 </TableHead>
 
@@ -776,4 +774,5 @@ const handleSearch = () => {
       </>
     ),
   };
-}
+};
+

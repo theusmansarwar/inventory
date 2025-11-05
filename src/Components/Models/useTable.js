@@ -16,6 +16,7 @@ import {
   IconButton,
   TextField,
   InputAdornment,
+  CircularProgress,
 } from "@mui/material";
 import SearchIcon from "@mui/icons-material/Search";
 import DeleteIcon from "@mui/icons-material/Delete";
@@ -48,7 +49,7 @@ export function useTable({ attributes,pageData, tableType, limitPerPage = 10 }) 
   );
   const [searchQuery, setSearchQuery] = useState(savedState.searchQuery || "");
   const [selected, setSelected] = useState([]);
-
+const [isLoading, setIsLoading] = useState(false);
   const [data, setData] = useState([]);
   const [totalRecords, setTotalRecords] = useState(0);
   const navigate = useNavigate();
@@ -78,6 +79,7 @@ export function useTable({ attributes,pageData, tableType, limitPerPage = 10 }) 
 
   const fetchData = async () => {
     let response;
+    setIsLoading(true)
     // if (tableType === "Categories") {
     //   response = await fetchallcategorylist(page, rowsPerPage, searchQuery);
 
@@ -106,9 +108,13 @@ export function useTable({ attributes,pageData, tableType, limitPerPage = 10 }) 
       if (response.status == 400) {
         localStorage.removeItem("Token");
         navigate("/login");
+        setIsLoading(false);
       } else {
+        setIsLoading(false);
         setData(response.data);
         setTotalRecords(response.totalRoles);
+        
+        
       }
     }
 
@@ -119,7 +125,9 @@ export function useTable({ attributes,pageData, tableType, limitPerPage = 10 }) 
       if (response.status == 400) {
         localStorage.removeItem("Token");
         navigate("/login");
+      setIsLoading(false);
       } else {
+        setIsLoading(false);
         setData(response.users);
         setTotalRecords(response.totalUsers);
       }
@@ -132,7 +140,9 @@ export function useTable({ attributes,pageData, tableType, limitPerPage = 10 }) 
       if (response.status == 400) {
         localStorage.removeItem("Token");
         navigate("/login");
+    setIsLoading(false);
       } else {
+        setIsLoading(false);
         setData(response.suppliers);
         setTotalRecords(response.totalSuppliers);
       }
@@ -145,7 +155,9 @@ export function useTable({ attributes,pageData, tableType, limitPerPage = 10 }) 
       if (response.status == 400) {
         localStorage.removeItem("Token");
         navigate("/login");
+      setIsLoading(false);
       } else {
+        setIsLoading(false);
         setData(response.products);
         setTotalRecords(response.totalProducts);
       }
@@ -157,7 +169,9 @@ export function useTable({ attributes,pageData, tableType, limitPerPage = 10 }) 
       if (response.status == 400) {
         localStorage.removeItem("Token");
         navigate("/login");
+      setIsLoading(false);
       } else {
+        setIsLoading(false);
         setData(response.data);
         setTotalRecords(response.totalRecords);
       }
@@ -169,7 +183,9 @@ export function useTable({ attributes,pageData, tableType, limitPerPage = 10 }) 
       if (response.status == 400) {
         localStorage.removeItem("Token");
         navigate("/login");
+      setIsLoading(false);
       } else {
+        setIsLoading(false);
         setData(response.data);
         setTotalRecords(response.totalPages);
       }
@@ -191,7 +207,9 @@ export function useTable({ attributes,pageData, tableType, limitPerPage = 10 }) 
       if (response.status == 400) {
         localStorage.removeItem("Token");
         navigate("/login");
+      setIsLoading(false);
       } else {
+        setIsLoading(false);
         setData(response.data);
         setTotalRecords(response.totalRecords);
       }
@@ -202,7 +220,9 @@ export function useTable({ attributes,pageData, tableType, limitPerPage = 10 }) 
       if (response.status == 400) {
         localStorage.removeItem("Token");
         navigate("/login");
+      setIsLoading(false);
       } else {
+        setIsLoading(false);
         setData(response.deadProducts);
         setTotalRecords(response.totalPages);
       }
@@ -213,7 +233,9 @@ export function useTable({ attributes,pageData, tableType, limitPerPage = 10 }) 
       if (response.status == 400) {
         localStorage.removeItem("Token");
         navigate("/login");
+      setIsLoading(false);
       } else {
+        setIsLoading(false);
         setData(response.assets);
         setTotalRecords(response.totalPages);
       }
@@ -617,7 +639,38 @@ const handleSearch = () => {
 </TableHead>
 
 <TableBody>
-  {data.length === 0 ? (
+ {isLoading ? (
+                     <TableRow>
+                      <TableCell colSpan={attributes.length + 2} align="center" sx={{ py: 8 }}>
+                        <Box
+                          sx={{
+                            display: "flex",
+                            flexDirection: "column",
+                            alignItems: "center",
+                            justifyContent: "center",
+                            gap: 2,
+                          }}
+                        >
+                          <CircularProgress
+                            size={45}
+                            thickness={4}
+                            sx={{ color: "var(--primary-color)" }}
+                          />
+                          <Typography
+                            sx={{
+                              color: "var(--secondary-color)",
+                              fontSize: "15px",
+                              fontWeight: 500,
+                              letterSpacing: "0.5px",
+                            }}
+                          >
+                            Loading {tableType}...
+                          </Typography>
+                        </Box>
+                      </TableCell>
+                    </TableRow>
+                  ) : data.length === 0 ? (
+                    // No Data Found State
     <TableRow>
       <TableCell
         colSpan={attributes.length + 2} // +2 for checkbox and Action columns

@@ -93,11 +93,22 @@ try{
     // ✅ Alert show karna
     // alert(`${Modeltype} Role Successfully!\n\nDetails:\n${JSON.stringify(roleData, null, 2)}`);
 
-     if (response?.status === 201 || response?.status === 200) {
-        onResponse({ messageType: "success", message: response.message });
-        setErrors({});
-        setOpen(false);
-      } else if (response?.status === 400 && response?.missingFields) {
+   if (response?.status === 201 || response?.status === 200) {
+  onResponse({ messageType: "success", message: response.message });
+
+  // ✅ Clear all form fields
+  setName("");
+  setDescription("");
+  setModules([]);
+  setStatus(true);
+  setId("");
+  setErrors({});
+
+  // ✅ Close modal
+  setOpen(false);
+}
+
+       else if (response?.status === 400 && response?.missingFields) {
         //  API validation errors
         const fieldErrors = {};
         response.missingFields.forEach((f) => {

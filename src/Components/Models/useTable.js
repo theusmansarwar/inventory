@@ -70,6 +70,13 @@ const [isLoading, setIsLoading] = useState(false);
   useEffect(() => {
     fetchData();
   }, [page, rowsPerPage]);
+  // ✅ Auto-refresh when search is cleared
+useEffect(() => {
+  if (searchQuery === "") {
+    fetchData();
+  }
+}, [searchQuery]);
+
   useEffect(() => {
     localStorage.setItem(
       `${tableType}-tableState`,
@@ -187,7 +194,7 @@ const [isLoading, setIsLoading] = useState(false);
       } else {
         setIsLoading(false);
         setData(response.data);
-        setTotalRecords(response.totalPages);
+        setTotalRecords(response.totalRecords);
       }
     }
     //  else if(tableType === "LicenseM"){
@@ -211,7 +218,7 @@ const [isLoading, setIsLoading] = useState(false);
       } else {
         setIsLoading(false);
         setData(response.data);
-        setTotalRecords(response.totalRecords);
+        setTotalRecords(response.total);
       }
     }
       else if(tableType === "DeadProduct"){
@@ -224,7 +231,7 @@ const [isLoading, setIsLoading] = useState(false);
       } else {
         setIsLoading(false);
         setData(response.deadProducts);
-        setTotalRecords(response.totalPages);
+        setTotalRecords(response.totalDeadProducts);
       }
     }
     else if(tableType === "Asset Location"){
@@ -237,7 +244,7 @@ const [isLoading, setIsLoading] = useState(false);
       } else {
         setIsLoading(false);
         setData(response.assets);
-        setTotalRecords(response.totalPages);
+        setTotalRecords(response.totalAssetLocations);
       }
     }
    
@@ -249,14 +256,29 @@ const [isLoading, setIsLoading] = useState(false);
 
   const isSelected = (id) => selected.includes(id);
 
-  const handleChangePage = (_, newPage) => {
-    setPage(newPage + 1); // ✅ Adjust for API's 1-based pagination
-  };
+  // const handleChangePage = (_, newPage) => {
+  //   setPage(newPage + 1); // ✅ Adjust for API's 1-based pagination
+  // };
 
-  const handleChangeRowsPerPage = (event) => {
-    setRowsPerPage(parseInt(event.target.value, 10));
-    setPage(0);
-  };
+  // const handleChangeRowsPerPage = (event) => {
+  //   setRowsPerPage(parseInt(event.target.value, 10));
+  //   setPage(0);
+  // };
+  // ✅ Fixed pagination handling
+const handleChangePage = (_, newPage) => {
+  const nextPage = newPage + 1; // Convert MUI’s 0-based to API’s 1-based
+
+  // Prevent going below page 1
+  if (nextPage < 1) return;
+  setPage(nextPage);
+};
+
+const handleChangeRowsPerPage = (event) => {
+  const newLimit = parseInt(event.target.value, 10);
+  setRowsPerPage(newLimit);
+  setPage(1); // ✅ Always go to page 1 after changing rows per page
+};
+
 
   const handleviewClick = (category) => {
      if (tableType === "Roles") {

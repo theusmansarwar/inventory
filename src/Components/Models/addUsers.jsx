@@ -43,6 +43,7 @@ export default function AddUsers({ open, setOpen, Modeldata, onResponse }) {
 
   // ✅ Fetch roles when modal opens
   React.useEffect(() => {
+    setErrors("")
     if (open) {
       (async () => {
         try {

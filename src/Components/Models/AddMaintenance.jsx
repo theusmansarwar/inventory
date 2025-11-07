@@ -32,37 +32,36 @@ export default function AddMaintenance({
   setOpen,
   Modeltype,
   Modeldata,
-  onResponse,
+  onResponse, // callback from parent to refresh data
 }) {
-  const [assetName, setAssetName] = useState(Modeldata?.assetName || "");
-  const [issue, setIssue] = useState(Modeldata?.issue || "");
-  const [reportedDate, setReportedDate] = useState(
-    Modeldata?.reportedDate ? Modeldata.reportedDate.split("T")[0] : ""
-  );
-  const [resolvedDate, setResolvedDate] = useState(
-    Modeldata?.resolvedDate ? Modeldata.resolvedDate.split("T")[0] : ""
-  );
-  const [expense, setExpense] = useState(Modeldata?.expense || "");
-  const [status, setStatus] = useState(Modeldata?.status || "Pending");
-  const [id, setId] = useState(Modeldata?._id || "");
+  const [assetName, setAssetName] = useState("");
+  const [issue, setIssue] = useState("");
+  const [reportedDate, setReportedDate] = useState("");
+  const [resolvedDate, setResolvedDate] = useState("");
+  const [expense, setExpense] = useState("");
+  const [status, setStatus] = useState("Pending");
+  const [id, setId] = useState("");
   const [errors, setErrors] = useState({});
   const [productList, setProductList] = useState([]);
 
-  // 🔄 Reset when model opens or changes
+  // 🔁 Reset modal each time it's opened
   useEffect(() => {
-    setAssetName(Modeldata?.assetName || "");
-    setIssue(Modeldata?.issue || "");
-    setReportedDate(
-      Modeldata?.reportedDate ? Modeldata.reportedDate.split("T")[0] : ""
-    );
-    setResolvedDate(
-      Modeldata?.resolvedDate ? Modeldata.resolvedDate.split("T")[0] : ""
-    );
-    setExpense(Modeldata?.expense || "");
-    setStatus(Modeldata?.status || "Pending");
-    setId(Modeldata?._id || "");
-    setErrors({});
-  }, [Modeldata]);
+    if (Modeltype === "Edit" && Modeldata) {
+      setAssetName(Modeldata?.assetName || "");
+      setIssue(Modeldata?.issue || "");
+      setReportedDate(
+        Modeldata?.reportedDate ? Modeldata.reportedDate.split("T")[0] : ""
+      );
+      setResolvedDate(
+        Modeldata?.resolvedDate ? Modeldata.resolvedDate.split("T")[0] : ""
+      );
+      setExpense(Modeldata?.expense || "");
+      setStatus(Modeldata?.status || "Pending");
+      setId(Modeldata?._id || "");
+    } else {
+      clearForm();
+    }
+  }, [Modeldata, Modeltype, open]);
 
   // ✅ Fetch products for dropdown
   useEffect(() => {
@@ -83,27 +82,40 @@ export default function AddMaintenance({
     if (open) getProducts();
   }, [open]);
 
-  const handleClose = () => setOpen(false);
+  // ✅ Clears form data
+  const clearForm = () => {
+    setAssetName("");
+    setIssue("");
+    setReportedDate("");
+    setResolvedDate("");
+    setExpense("");
+    setStatus("Pending");
+    setErrors({});
+  };
 
-  // ✅ Submit with validation
+  const handleClose = () => {
+    clearForm();
+    setOpen(false);
+  };
+
+  // ✅ Validation + Submit
   const handleSubmit = async (e) => {
     e.preventDefault();
     const newErrors = {};
 
-    // Basic required checks
     if (!assetName) newErrors.assetName = "Product is required";
     if (!issue) newErrors.issue = "Issue is required";
+    else if (!/^[A-Za-z\s]+$/.test(issue))
+      newErrors.issue = "Issue should contain only letters";
     if (!reportedDate) newErrors.reportedDate = "Reported date is required";
+    if (status === "Resolved" && !resolvedDate)
+      newErrors.resolvedDate = "Resolved date is required";
     if (!expense) newErrors.expense = "Expense is required";
-
-    // ✅ Conditional resolved date requirement
-    if (status === "Resolved" && !resolvedDate) {
-      newErrors.resolvedDate = "Resolved date is required when status is 'Resolved'";
-    }
+    else if (parseFloat(expense) < 0)
+      newErrors.expense = "Expense cannot be negative";
 
     setErrors(newErrors);
 
-    // ❌ Stop if errors exist
     if (Object.keys(newErrors).length > 0) return;
 
     const maintenanceData = {
@@ -128,8 +140,12 @@ export default function AddMaintenance({
           messageType: "success",
           message: response?.message || "Maintenance record saved!",
         });
+
+        // ✅ Reset form and close modal
+        clearForm();
         setOpen(false);
-        setErrors({});
+
+      
       } else if (response?.status === 400 && response?.missingFields) {
         const fieldErrors = {};
         response.missingFields.forEach((f) => {
@@ -178,7 +194,9 @@ export default function AddMaintenance({
                 <MenuItem disabled>No Products Found</MenuItem>
               )}
             </Select>
-            {errors.assetName && <FormHelperText>{errors.assetName}</FormHelperText>}
+            {errors.assetName && (
+              <FormHelperText>{errors.assetName}</FormHelperText>
+            )}
           </FormControl>
 
           <TextField
@@ -243,12 +261,16 @@ export default function AddMaintenance({
               <MenuItem value="In Progress">In Progress</MenuItem>
               <MenuItem value="Resolved">Resolved</MenuItem>
             </Select>
-            {errors.status && <FormHelperText>{errors.status}</FormHelperText>}
+            {errors.status && (
+              <FormHelperText>{errors.status}</FormHelperText>
+            )}
           </FormControl>
         </Box>
 
         {/* ✅ Buttons */}
-        <Box sx={{ display: "flex", gap: 2, justifyContent: "flex-end", mt: 3 }}>
+        <Box
+          sx={{ display: "flex", gap: 2, justifyContent: "flex-end", mt: 3 }}
+        >
           <Button
             type="button"
             variant="contained"

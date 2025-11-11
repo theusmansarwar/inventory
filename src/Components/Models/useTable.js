@@ -67,16 +67,26 @@ const [isLoading, setIsLoading] = useState(false);
   const [openDeleteModal, setOpenDeleteModal] = useState(false);
    const [openDeadProductModal, setOpenDeadProductModal] = useState(false);
    const [openAssetLocationModal, setOpenAssetLocationModal] = useState(false);
+   const [debouncedSearch, setDebouncedSearch] = useState(searchQuery);
   useEffect(() => {
     fetchData();
-  }, [page, rowsPerPage]);
+  }, [page, rowsPerPage, debouncedSearch]);
   // ✅ Auto-refresh when search is cleared
-useEffect(() => {
-  if (searchQuery === "") {
-    fetchData();
-  }
-}, [searchQuery]);
 
+// useEffect(() => {
+//   if (searchQuery === "") {
+//     fetchData();
+//   }
+// }, [searchQuery]);
+ useEffect(() => {
+    const handler = setTimeout(() => {
+      setDebouncedSearch(searchQuery);
+    }, 500); // delay in ms
+
+    return () => {
+      clearTimeout(handler);
+    };
+  }, [searchQuery]);
   useEffect(() => {
     localStorage.setItem(
       `${tableType}-tableState`,
@@ -479,6 +489,7 @@ const handleSearch = () => {
   return {
     tableUI: (
       <>
+      {openRolesModal && (
       <AddRoles
           open={openRolesModal}
           setOpen={setOpenRolesModal}
@@ -486,6 +497,8 @@ const handleSearch = () => {
           Modeldata={modelData}
           onResponse={handleResponse}
         />
+        )}
+       {openUserModal && (
           <AddUsers
           open={openUserModal}
           setOpen={setOpenUserModal}
@@ -493,6 +506,8 @@ const handleSearch = () => {
           Modeldata={modelData}
           onResponse={handleResponse}
         />
+        )}
+        {openSupplierModal && (
          <AddSupplier
           open={openSupplierModal}
           setOpen={setOpenSuppplierModal}
@@ -501,6 +516,8 @@ const handleSearch = () => {
           onResponse={handleResponse}
          refreshTable={fetchData} 
         />
+        )}
+        {openProductModal &&(
          <AddProduct
           open={openProductModal}
           setOpen={setOpenProductModal}
@@ -508,6 +525,8 @@ const handleSearch = () => {
           Modeldata={modelData}
           onResponse={handleResponse}
         />
+        )}
+        {openStockModal && (
          <AddStock
           open={openStockModal}
           setOpen={setOpenStockModal}
@@ -515,6 +534,8 @@ const handleSearch = () => {
           Modeldata={modelData}
           onResponse={handleResponse}
         />
+        )}
+        {openAssetModal && (
           <AddAsset
           open={openAssetModal}
           setOpen={setOpenAssetModal}
@@ -522,13 +543,8 @@ const handleSearch = () => {
           Modeldata={modelData}
           onResponse={handleResponse}
         />
-         {/* <AddLicense
-          open={openLicenseModal}
-          setOpen={setOpenLicenseModal}
-          Modeltype={modeltype}
-          Modeldata={modelData}
-          onResponse={handleResponse}
-        /> */}
+       )}
+       {openMaintenanceModal && (
           <AddMaintenance
           open={openMaintenanceModal}
           setOpen={setOpenMaintenanceModal}
@@ -536,7 +552,8 @@ const handleSearch = () => {
           Modeldata={modelData}
           onResponse={handleResponse}
         />
-
+         )}
+         {openDeadProductModal && (
           <AddDeadProduct
           open={openDeadProductModal}
           setOpen={setOpenDeadProductModal}
@@ -544,7 +561,8 @@ const handleSearch = () => {
           Modeldata={modelData}
           onResponse={handleResponse}
         />
-
+        )}
+        {openAssetLocationModal && (
         <AddAssetLocation
           open={openAssetLocationModal}
           setOpen={setOpenAssetLocationModal}
@@ -552,6 +570,7 @@ const handleSearch = () => {
           Modeldata={modelData}
           onResponse={handleResponse}
         />
+        )}
         <DeleteModal
           open={openDeleteModal}
           setOpen={setOpenDeleteModal}
@@ -571,9 +590,7 @@ const handleSearch = () => {
                     variant="outlined"
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
-                    onKeyPress={(e) => e.key === "Enter" && handleSearch()}
-
-
+                    onKeyPress={(e) => e.key === "Enter" && setDebouncedSearch(searchQuery)}
                     sx={{
                       minWidth: 200,
                       backgroundColor: "white",
@@ -594,7 +611,6 @@ const handleSearch = () => {
                       endAdornment: (
                         <InputAdornment position="end">
                           <SearchIcon
-                            onClick={handleSearch}
                             sx={{
                               cursor: "pointer",
                               color: "var(--background-color)",
